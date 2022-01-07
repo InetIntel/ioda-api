@@ -85,7 +85,7 @@ class InfluxService
                 "extra" => self::BGP_EXTRA_CLAUSE,
                 "aggr" => "",
             ],
-            "datasource_id" => 3,
+            "datasource_id" => 1,
             "field" => "visible_slash24_cnt",
             "bucket" => "ioda_bgp",
         ],
@@ -120,7 +120,7 @@ class InfluxService
                 "extra" => "",
                 "aggr" => "",
             ],
-            "datasource_id" => 9,
+            "datasource_id" => 1,
             "field" => "up_slash24_cnt",
             "bucket" => "ioda_trinocular_summed",
         ],
@@ -155,9 +155,44 @@ class InfluxService
                 "extra" => "",
                 "aggr" => "",
             ],
-            "datasource_id" => 7,
+            "datasource_id" => 1,
             "field" => "uniq_src_ip",
             "bucket" => "ioda_ucsd_nt_non_erratic",
+        ],
+        "merit-nt" => [
+            "continent" => [
+                "measurement" => "geo_continent",
+                "code_field" => "continent_code",
+                "extra" => self::NT_EXTRA_GEO,
+                "aggr" => "",
+            ],
+            "country" => [
+                "measurement" => "geo_country",
+                "code_field" => "country_code",
+                "extra" => self::NT_EXTRA_GEO,
+                "aggr" => "",
+            ],
+            "county" => [
+                "measurement" => "geo_county",
+                "code_field" => "county_code",
+                "extra" => self::NT_EXTRA_GEO,
+                "aggr" => "",
+            ],
+            "region" => [
+                "measurement" => "geo_region",
+                "code_field" => "region_code",
+                "extra" => self::NT_EXTRA_GEO,
+                "aggr" => "",
+            ],
+            "asn" => [
+                "measurement" => "origin_asn",
+                "code_field" => "asn",
+                "extra" => "",
+                "aggr" => "",
+            ],
+            "datasource_id" => 1,
+            "field" => "uniq_src_ip",
+            "bucket" => "ioda_merit_nt_non_erratic",
         ]
     ];
 

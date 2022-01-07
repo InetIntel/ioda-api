@@ -73,6 +73,24 @@ class DatasourcesController extends ApiController
      *     </li>
      * </ul>
      *
+     * <h3>Google Transparency Report (gtr)</h3>
+     * <ul>
+     *     <li>
+     *         Data is obtained by processing data published by the <em>Google
+     *         Transparency Report</em> project. We periodically use their
+     *         public API to scrape this data and insert it into the IODA
+     *         data pipeline.
+     *     </li>
+     *     <li>
+     *         The transparency report project publishes measurements
+     *         for each major Google product (e.g. Docs, Mail,
+     *         Search, Youtube and so on), separated by country. Not all
+     *         combinations of country and product are represented, but most
+     *         are available. Measurements are produced on a half-hourly basis,
+     *         with a time lag of approximately 2-3 hours.
+     *     </li>
+     * </ul>
+     *
      * <h3>Active Probing (ping-slash24)</h3>
      * <ul>
      *     <li>
@@ -94,7 +112,7 @@ class DatasourcesController extends ApiController
      *     </li>
      * </ul>
      *
-     * <h3>Network Telescope (ucsd-nt)</h3>
+     * <h3>Network Telescope (ucsd-nt and merit-nt)</h3>
      * <ul>
      *     <li>
      *         We analyze traffic data from both the <a href=https://www.caida.org/projects/network_telescope/>UCSD</a> and <a href=https://www.merit.edu/a-data-repository-for-cyber-security-research-and-education/>Merit</a> Network Telescopes.
@@ -169,7 +187,7 @@ class DatasourcesController extends ApiController
      *     name="datasource",
      *     in="path",
      *     type="string",
-     *     description="Shortname of the data source: bgp, ucsd-nt, ping-slash24",
+     *     description="Shortname of the data source: bgp, ucsd-nt, merit-nt, gtr, ping-slash24",
      *     default=null
      * )
      * @SWG\Response(
