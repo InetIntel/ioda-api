@@ -57,6 +57,13 @@ class DatasourceService
                 60,
                 "influxv2"
             ),
+            "gtr" => new DatasourceEntity(
+                "gtr",
+                "Google Transparency Report",
+                "Traffic",
+                1800,
+                "influxv2"
+            ),
             "merit-nt" => new DatasourceEntity(
                 "merit-nt",
                 "Merit Network Telescope",
