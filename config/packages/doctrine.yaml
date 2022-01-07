@@ -1,0 +1,27 @@
+parameters:
+    # Adds a fallback DATABASE_URL if the env var is not set.
+    # This allows you to run cache:warmup even if your
+    # environment variables are not available yet.
+    # You should not need to change this value.
+    env(DATABASE_URL): ''
+
+doctrine:
+    dbal:
+        connections:
+          ioda_db:
+            driver: 'pdo_mysql'
+            server_version: '9.4'
+            url: '%env(resolve:DATABASE_ALERTS_URL)%'
+    orm:
+        auto_generate_proxy_classes: '%kernel.debug%'
+        entity_managers:
+          outages:
+            connection: ioda_db
+            naming_strategy: doctrine.orm.naming_strategy.underscore
+            mappings:
+              Alerts:
+                is_bundle: false
+                type: annotation
+                dir: '%kernel.project_dir%/src/Entity'
+                prefix: 'App\Entity'
+                alias: Outages

@@ -1,0 +1,63 @@
+# Put parameters here that don't need to change on each machine where the app is deployed
+# https://symfony.com/doc/current/best_practices/configuration.html#application-related-configuration
+parameters:
+
+services:
+    # default configuration for services in *this* file
+    _defaults:
+        autowire: true      # Automatically injects dependencies in your services.
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+        public: false       # Allows optimizing the container by removing unused services; this also means
+                            # fetching services directly from the container via $container->get() won't work.
+                            # The best practice is to be explicit about your dependencies anyway.
+
+    # makes classes in src/ available to be used as services
+    # this creates a service per class whose id is the fully-qualified class name
+    App\:
+        resource: '../src/*'
+        exclude: '../src/{Entity,Migrations,Tests,Kernel.php}'
+
+    # controllers are imported separately to make sure services can be injected
+    # as action arguments even if you don't extend any base controller class
+    App\Controller\:
+        resource: '../src/Controller'
+        tags: ['controller.service_arguments']
+
+    datetime_method_normalizer:
+        class: Symfony\Component\Serializer\Normalizer\DateTimeNormalizer
+        public: false
+        tags: [serializer.normalizer]
+
+    metadata_entity_normalizer:
+        class: App\Entity\MetadataEntityNormalizer
+        public: false
+        tags: [serializer.normalizer]
+
+    outages_alert_normalizer:
+        class: App\Entity\OutagesAlertNormalizer
+        public: false
+        tags: [serializer.normalizer]
+
+    outages_event_normalizer:
+        class: App\Entity\OutagesEventNormalizer
+        public: false
+        tags: [serializer.normalizer]
+
+    timeseries_normalizer:
+        class: App\TimeSeries\TimeSeriesNormalizer
+        public: false
+        tags: [serializer.normalizer]
+
+    timeseries_set_normalizer:
+        class: App\TimeSeries\TimeSeriesSetNormalizer
+        public: false
+        tags: [serializer.normalizer]
+
+    # get_set_method_normalizer:
+    #     class: Symfony\Component\Serializer\Normalizer\GetSetMethodNormalizer
+    #     public: false
+    #     tags: [serializer.normalizer]
+    #     arguments:
+    #         $nameConverter: '@serializer.name_converter.camel_case_to_snake_case'
+
+    Auth0\JWTAuthBundle\Security\Auth0Service: '@jwt_auth.auth0_service'

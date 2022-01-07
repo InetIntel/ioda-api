@@ -1,0 +1,25 @@
+nelmio_api_doc:
+    documentation:
+        host: api.ioda.caida.org
+        schemes: [https]
+        info:
+            title: IODA HTTP API
+            description: Data and metadata API for IODA project.
+            version: 2.0.0
+        tags:
+        - name: Time Series Signals
+          description: Time series data and metadata access calls
+        - name: Topographic
+          description: Topographic data access calls
+        - name: URL Shortener
+          description: Create and visit shortened URLs
+        - name: Metadata Entities
+          description: Retrieve metadata information used in IODA
+        - name: Data Sources
+          description: Information about data sources used in IODA
+        - name: Outages
+          description: IODA outages
+
+    areas: # to filter documented areas
+        path_patterns:
+            - ^/%env(CH_API_VERSION)%(?!/docs|/_)/.+
