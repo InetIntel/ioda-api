@@ -81,6 +81,7 @@ class SignalsService
         $queryJsons = [
             "bgp" => "alias(bgp.prefix-visibility.$fqid.v4.visibility_threshold.min_50%_ff_peer_asns.visible_slash24_cnt,\"bgp\")",
             "ucsd-nt" => "alias(darknet.ucsd-nt.non-erratic.$fqid.uniq_src_ip,\"ucsd-nt\")",
+            "merit-nt" => "alias(darknet.merit-nt.non-erratic.$fqid.uniq_src_ip,\"merit-nt\")",
             "ping-slash24" => "alias(sumSeries(keepLastValue(active.ping-slash24.$fqid.probers.team-1.caida-sdsc.*.up_slash24_cnt,1)),\"ping-slash24\")",
         ];
         return $queryJsons[$datasource_id];
@@ -154,7 +155,8 @@ class SignalsService
                 $unique[] = end($fields);
             }
 
-            if($datasource_id=="ucsd-nt" && $common=="asn"){
+	    if(($datasource_id=="ucsd-nt" || $datasource_id=="merit-nt")
+		    && $common=="asn"){
                 $common="routing.asn";
             }
             $fqid_combined = $common . ".{" . implode(",", $unique) . "}";
@@ -175,7 +177,9 @@ class SignalsService
 
             $queryJsons = [
                 "bgp" => "aliasByNode(bgp.prefix-visibility.$fqid_combined.v4.visibility_threshold.min_50%_ff_peer_asns.visible_slash24_cnt, $aliasIndex[$entityType])",
-                "ucsd-nt" => "aliasByNode(darknet.ucsd-nt.non-erratic.$fqid_combined.uniq_src_ip, $aliasIndexNt[$entityType])",
+		"ucsd-nt" => "aliasByNode(darknet.ucsd-nt.non-erratic.$fqid_combined.uniq_src_ip, $aliasIndexNt[$entityType])",
+		"merit-nt" => "aliasByNode(darknet.merit-nt.non-erratic.$fqid_combined.uniq_src_ip, $aliasIndexNt[$entityType])",
+		"gtr" => "aliasByNode(google_tr.$fqid_combined.traffic, $aliasIndex[$entityType])",
                 // NOTE: if see strange gaps in between bins, consider bring back keepLastValue function for ping-slash24
                 "ping-slash24" => "aliasByNode(groupByNode(active.ping-slash24.$fqid_combined.probers.team-1.caida-sdsc.*.up_slash24_cnt,$aliasIndex[$entityType], 'sumSeries'), $aliasIndex[$entityType])",
             ];
@@ -250,11 +254,10 @@ class SignalsService
      * @param array $entities
      * @param array $datasources
      * @param int|null $maxPoints
-     * @param bool $graphite
      * @return array
      * @throws BackendException
      */
-    public function queryForAll(QueryTime $from, QueryTime $until, array $entities, array $datasources, ?int $maxPoints, bool $graphite): array
+    public function queryForAll(QueryTime $from, QueryTime $until, array $entities, array $datasources, ?int $maxPoints): array
     {
         $ts_array = [];
 
@@ -267,17 +270,12 @@ class SignalsService
 
         foreach($datasources as $datasource){
             $now = microtime(true);
-            $backend = $graphite? "graphite": "influxv2";
+            $backend = "influxv2";
             $ds = $datasource->getDatasource();
 
-            if($graphite) {
-                $exp_json = $this->buildMultiEntityGraphiteExpression($entities, $ds);
-                $arr = $this->graphiteBackend->queryGraphite($from, $until, $exp_json, $maxPoints);
-            } else {
-                $step = $this->calculateStep($from, $until, $maxPoints, $datasource->getNativeStep());
-                $from = $this->roundDownFromTs($from, $step);
-                $arr = $this->queryForInfluxV2($ds, $entities, $from, $until, $step);
-            }
+            $step = $this->calculateStep($from, $until, $maxPoints, $datasource->getNativeStep());
+            $from = $this->roundDownFromTs($from, $step);
+            $arr = $this->queryForInfluxV2($ds, $entities, $from, $until, $step);
 
             $perf[] = [
                 "datasource"=>$ds,

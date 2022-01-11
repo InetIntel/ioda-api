@@ -57,6 +57,20 @@ class DatasourceService
                 60,
                 "influxv2"
             ),
+            "gtr" => new DatasourceEntity(
+                "gtr",
+                "Google Transparency Report",
+                "Traffic",
+                1800,
+                "influxv2"
+            ),
+            "merit-nt" => new DatasourceEntity(
+                "merit-nt",
+                "Merit Network Telescope",
+                "Unique Source IPs",
+                60,
+                "influxv2"
+            ),
             "bgp" => new DatasourceEntity(
                 "bgp",
                 "BGP",
@@ -111,6 +125,8 @@ class DatasourceService
             $ds = "bgp";
         } elseif (strpos($fqid,"ucsd-nt")!==false){
             $ds = "ucsd-nt";
+        } elseif (strpos($fqid,"merit-nt")!==false){
+            $ds = "merit-nt";
         } elseif (strpos($fqid,"ping-slash24")!==false){
             $ds = "ping-slash24";
         }

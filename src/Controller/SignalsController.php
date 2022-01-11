@@ -158,7 +158,7 @@ class SignalsController extends ApiController
      *     in="query",
      *     type="string",
      *     description="Filter signals by datasource",
-     *     enum={"bgp", "ucsd-nt", "ping-slash24"},
+     *     enum={"bgp", "ucsd-nt", "ping-slash24", "merit-nt", "gtr"},
      *     required=false,
      *     default=null
      * )
@@ -169,14 +169,6 @@ class SignalsController extends ApiController
      *     description="Maximum number of points per time-series",
      *     required=false,
      *     default=null
-     * )
-     * @SWG\Parameter(
-     *     name="graphite",
-     *     in="query",
-     *     type="boolean",
-     *     description="Whether to query for graphite data backend",
-     *     required=false,
-     *     default=false
      * )
      * @SWG\Response(
      *     response=200,
@@ -261,7 +253,6 @@ class SignalsController extends ApiController
                                 new RequestParameter('until', RequestParameter::INTEGER, null, true),
                                 new RequestParameter('datasource', RequestParameter::STRING, null, false),
                                 new RequestParameter('maxPoints', RequestParameter::INTEGER, null, false),
-                                new RequestParameter('graphite', RequestParameter::BOOL, false, false),
                             ],
                             $request
         );
@@ -274,7 +265,6 @@ class SignalsController extends ApiController
         $until = $env->getParam('until');
         $datasource_str = $env->getParam('datasource');
         $maxPoints = $env->getParam('maxPoints');
-        $graphite = $env->getParam('graphite');
         $metas = $this->metadataService->search($entityType, $entityCode);
 
         try{
@@ -298,7 +288,7 @@ class SignalsController extends ApiController
         $ts_sets = [];
         $perf = null;
         try{
-            [$ts_sets, $perf] = $this->signalsService->queryForAll($from, $until, $entities, $datasource_array, $maxPoints, $graphite);
+            [$ts_sets, $perf] = $this->signalsService->queryForAll($from, $until, $entities, $datasource_array, $maxPoints);
         } catch (BackendException $ex) {
             $env->setError($ex->getMessage());
         }

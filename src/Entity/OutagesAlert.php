@@ -40,7 +40,7 @@ use Symfony\Component\Serializer\Annotation\Groups;
 use App\Entity\MetadataEntity;
 
 /**
- * @ORM\Entity(repositoryClass="App\Repository\OutagersAlertsRepository")
+ * @ORM\Entity(repositoryClass="App\Repository\OutagesAlertsRepository")
  * @ORM\Table(name="alerts_with_entity_view")
  */
 class OutagesAlert
