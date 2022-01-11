@@ -1,6 +1,6 @@
 nelmio_api_doc:
     documentation:
-        host: api.ioda.caida.org
+        host: api.ioda.inetintel.cc.gatech.edu
         schemes: [https]
         info:
             title: IODA HTTP API
