@@ -41,9 +41,19 @@ use App\TimeSeries\TimeSeries;
 use App\Utils\QueryTime;
 use DateTime;
 
+/* This Backend should never be used, as all post-GT migration data should be
+ * in an InfluxDBv2 database.
+ *
+ * I've replaced the URL with localhost to avoid any inadvertant queries
+ * to the old CAIDA host.
+ *
+ * TODO Purge all graphite code completely to avoid future confusion!
+ */
+
 class GraphiteBackend
 {
-    const GRAPHITE_URL = 'http://charthouse-render.int.limbo.caida.org';
+    #const GRAPHITE_URL = 'http://charthouse-render.int.limbo.caida.org';
+    const GRAPHITE_URL = 'http://localhost';
     const QUERY_TIMEOUT = 120;
     const DATA_CACHE_TIMEOUTS = [
         7200 => 60, // cache last two hours for 1 min

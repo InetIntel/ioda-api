@@ -254,11 +254,10 @@ class SignalsService
      * @param array $entities
      * @param array $datasources
      * @param int|null $maxPoints
-     * @param bool $graphite
      * @return array
      * @throws BackendException
      */
-    public function queryForAll(QueryTime $from, QueryTime $until, array $entities, array $datasources, ?int $maxPoints, bool $graphite): array
+    public function queryForAll(QueryTime $from, QueryTime $until, array $entities, array $datasources, ?int $maxPoints): array
     {
         $ts_array = [];
 
@@ -271,17 +270,12 @@ class SignalsService
 
         foreach($datasources as $datasource){
             $now = microtime(true);
-            $backend = $graphite? "graphite": "influxv2";
+            $backend = "influxv2";
             $ds = $datasource->getDatasource();
 
-            if($graphite) {
-                $exp_json = $this->buildMultiEntityGraphiteExpression($entities, $ds);
-                $arr = $this->graphiteBackend->queryGraphite($from, $until, $exp_json, $maxPoints);
-            } else {
-                $step = $this->calculateStep($from, $until, $maxPoints, $datasource->getNativeStep());
-                $from = $this->roundDownFromTs($from, $step);
-                $arr = $this->queryForInfluxV2($ds, $entities, $from, $until, $step);
-            }
+            $step = $this->calculateStep($from, $until, $maxPoints, $datasource->getNativeStep());
+            $from = $this->roundDownFromTs($from, $step);
+            $arr = $this->queryForInfluxV2($ds, $entities, $from, $until, $step);
 
             $perf[] = [
                 "datasource"=>$ds,
