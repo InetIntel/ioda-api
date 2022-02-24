@@ -163,25 +163,25 @@ class InfluxService
             "continent" => [
                 "measurement" => "geo_continent",
                 "code_field" => "continent_code",
-                "extra" => self::NT_EXTRA_GEO,
+                "extra" => "",
                 "aggr" => "",
             ],
             "country" => [
                 "measurement" => "geo_country",
                 "code_field" => "country_code",
-                "extra" => self::NT_EXTRA_GEO,
+                "extra" => "",
                 "aggr" => "",
             ],
             "county" => [
                 "measurement" => "geo_county",
                 "code_field" => "county_code",
-                "extra" => self::NT_EXTRA_GEO,
+                "extra" => "",
                 "aggr" => "",
             ],
             "region" => [
                 "measurement" => "geo_region",
                 "code_field" => "region_code",
-                "extra" => self::NT_EXTRA_GEO,
+                "extra" => "",
                 "aggr" => "",
             ],
             "asn" => [
