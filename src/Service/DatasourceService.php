@@ -64,11 +64,19 @@ class DatasourceService
                 1800,
                 "influxv2"
             ),
+            /* XXX NOTE, merit measurements are every 60 seconds, but
+             * Alberto has requested that we use a 300 second step for now.
+             * This means you won't be able to use the API to get the "raw"
+             * measurements, but this should make for cleaner lines on our
+             * UI graphs -- eventually, we should fix the UI to always
+             * query for a suitable number of datapoints OR add an minStep
+             * parameter to the API (probably the latter...)
+             */
             "merit-nt" => new DatasourceEntity(
                 "merit-nt",
                 "Merit Network Telescope",
                 "Unique Source IPs",
-                60,
+                300,    // XXX TEMPORARY
                 "influxv2"
             ),
             "bgp" => new DatasourceEntity(
