@@ -220,6 +220,22 @@ class MetadataEntity
         }
     }
 
+    public function setFQID(string $fqid)
+    {
+        $attr = new MetadataEntityAttribute();
+        $attr->setKey("fqid");
+        $attr->setValue($fqid);
+        $this->attributes->add($attr);  // XXX what if FQID already exists?
+    }
+
+    public function setIpCount(int $count)
+    {
+        $attr = new MetadataEntityAttribute();
+        $attr->setKey("ip_count");
+        $attr->setValue($count);
+        $this->attributes->add($attr);  // XXX what if count already exists?
+    }
+
     /**
      * Get relationships
      *

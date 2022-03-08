@@ -244,6 +244,8 @@ class EntitiesController extends ApiController
             $defaultAsn->setName(sprintf("AS%d", $entityCode));
             $defaultAsn->setId(1001);
             $defaultAsn->setType($defaultAsnMetatype);
+            $defaultAsn->setFQID(sprintf("asn.%d", $entityCode));
+            $defaultAsn->setIpCount(0);
 
             $entity = [$defaultAsn];
         }
