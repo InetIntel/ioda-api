@@ -37,6 +37,8 @@ namespace App\Controller;
 
 use App\Service\MetadataEntitiesService;
 use App\Service\DatasourceService;
+use App\Entity\MetadataEntity;
+use App\Entity\MetadataEntityType;
 use App\Response\Envelope;
 use App\Response\RequestParameter;
 use App\Service\SignalsService;
@@ -266,6 +268,30 @@ class SignalsController extends ApiController
         $datasource_str = $env->getParam('datasource');
         $maxPoints = $env->getParam('maxPoints');
         $metas = $this->metadataService->search($entityType, $entityCode);
+
+        /* Mildly dirty hack added by Shane to provide a "default"
+         * name for ASNs which don't have entries in the AS2org
+         * dataset. This is a much better alternative than just erroring
+         * when we don't have usable metadata.
+         *
+         * Note: the ID numbers here are irrelevant and not used at all.
+         * They're normally sequenced IDs from the metadata rows in the
+         * postgres database, but I'm just making sure they are set to
+         * something in case some other code requires them to be set.
+         */
+        if (count($metas) < 1 && $entityType == "asn") {
+            $defaultAsn = new MetadataEntity();
+            $defaultAsnMetatype = new MetadataEntityType();
+
+            $defaultAsnMetatype->setId(8);
+            $defaultAsnMetatype->setType("asn");
+            $defaultAsn->setCode($entityCode);
+            $defaultAsn->setName(sprintf("AS%d", $entityCode));
+            $defaultAsn->setId(1001);
+            $defaultAsn->setType($defaultAsnMetatype);
+
+            array_push($metas, $defaultAsn);
+        }
 
         try{
             $from = new QueryTime($from);
