@@ -46,6 +46,9 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
+use App\Entity\MetadataEntity;
+use App\Entity\MetadataEntityType;
+
 
 /**
  * Class EntitiesController
@@ -220,6 +223,31 @@ class EntitiesController extends ApiController
         }
         $entity = $service->search($entityType, $entityCode, $search, $limit, $page, true, $relatedTo[0], $relatedTo[1]);
         // $entity = $service->lookup($entityType, $entityCode, $relatedTo[0], $relatedTo[1], $limit);
+
+        /* Mildly dirty hack added by Shane to provide a "default"
+         * name for ASNs which don't have entries in the AS2org
+         * dataset. This is a much better alternative than just erroring
+         * when we don't have usable metadata.
+         *
+         * Note: the ID numbers here are irrelevant and not used at all.
+         * They're normally sequenced IDs from the metadata rows in the
+         * postgres database, but I'm just making sure they are set to
+         * something in case some other code requires them to be set.
+         */
+        if ($entity == null && $entityType == "asn") {
+            $defaultAsn = new MetadataEntity();
+            $defaultAsnMetatype = new MetadataEntityType();
+
+            $defaultAsnMetatype->setId(8);
+            $defaultAsnMetatype->setType("asn");
+            $defaultAsn->setCode($entityCode);
+            $defaultAsn->setName(sprintf("AS%d", $entityCode));
+            $defaultAsn->setId(1001);
+            $defaultAsn->setType($defaultAsnMetatype);
+
+            $entity = [$defaultAsn];
+        }
+
         $env->setData($entity);
         return $this->json($env);
     }
