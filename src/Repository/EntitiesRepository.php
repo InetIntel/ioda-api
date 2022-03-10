@@ -78,6 +78,14 @@ class EntitiesRepository extends ServiceEntityRepository
             ]
         );
 
+       /* Try to avoid running out of memory if the request doesn't set
+        * a limit.
+        */
+       if (!(isset($limit))) {
+           $limit = 2000;
+       }
+
+
         $offset=null;
         if(isset($limit) && isset($page)){
             $offset = $limit * $page;
