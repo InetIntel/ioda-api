@@ -65,34 +65,35 @@ class EntitiesController extends ApiController
      * <h2> Usage examples </h2>
      *
      * To get information about United States, use the following query:
-     * <pre>/entities/country/US</pre>
+     * <pre>/entities/?entityType=country&entityCode=US</pre>
      *
      * </br>
      *
      * To search for entities whose name contains the word "united", use the following query
      * <pre>/entities?search=united</pre>
      * To narrow down the previous search for only the countries, use the following query
-     * <pre>/entities/country?search=united</pre>
+     * <pre>/entities/?entityType=country&search=united</pre>
      *
      * </br>
      *
      * For more advanced search, you can also use the <b>relatedTo</b> parameter. It takes a entity type and code
      * separated by <b>/</b>.
      * For example, to search for all ASes operate in New Zealand, use the following query:
-     * <pre><code>/entities/asn?relatedTo=country/NZ</code></pre>
+     * <pre><code>/entities/?entityType=asn&relatedTo=country/NZ</code></pre>
      *
-     * @Route("/{entityType}/{entityCode}", methods={"GET"}, name="get", defaults={"entityType"=null,"entityCode"=null})
+     * @Route("/", methods={"GET"}, name="get")
      * @SWG\Tag(name="Metadata Entities")
      * @SWG\Parameter(
      *     name="entityType",
-     *     in="path",
+     *     in="query",
      *     type="string",
      *     description="Type of the entity, e.g. country, region, asn",
-     *     default=null
+     *     default=null,
+     *     required=false
      * )
      * @SWG\Parameter(
      *     name="entityCode",
-     *     in="path",
+     *     in="query",
      *     type="string",
      *     description="Code of the entity, e.g. for United States the code is 'US'; use comma ',' to separate multiple codes",
      *     required=false,
@@ -155,15 +156,12 @@ class EntitiesController extends ApiController
      *     )
      * )
      *
-     * @var string|null $entityType
-     * @var string|null $entityCode
      * @var Request $request
      * @var SerializerInterface $serializer
      * @var MetadataEntitiesService
      * @return JsonResponse
      */
     public function lookup(
-        ?string $entityType, ?string $entityCode,
         Request $request,
         SerializerInterface $serializer,
         MetadataEntitiesService $service
@@ -175,6 +173,8 @@ class EntitiesController extends ApiController
                 new RequestParameter('search', RequestParameter::STRING, null, false),
                 new RequestParameter('limit', RequestParameter::INTEGER, null, false),
                 new RequestParameter('page', RequestParameter::INTEGER, null, false),
+                new RequestParameter('entityType', RequestParameter::STRING, null, false),
+                new RequestParameter('entityCode', RequestParameter::STRING, null, false),
             ],
             $request
         );
@@ -187,7 +187,9 @@ class EntitiesController extends ApiController
         $relatedTo = $env->getParam('relatedTo');
         $limit = $env->getParam('limit');
         $page = $env->getParam('page');
-        /*
+	$entityType = $env->getParam('entityType');
+	$entityCode = $env->getParam('entityCode');
+	/*
         if($search){
             $entity = $service->search($entityType, null, $search, $limit, true);
             $env->setData($entity);
