@@ -128,6 +128,13 @@ class DatasourcesController extends ApiController
      *     </li>
      * </ul>
      *
+     * <h3>Google Transparency Report (gtr)</h3>
+     * <ul>
+     *     <li>
+     *          Data published by the Google Transparency Report team that provide a normalised indication of the amount of traffic observed for each of Google's public services (e.g. search, maps, drive, translate etc.) for a particular country.
+     *     </li>
+     * </ul>
+     *
      * @Route("/", methods={"GET"}, name="getall")
      * @SWG\Tag(name="Data Sources")
      * @SWG\Response(

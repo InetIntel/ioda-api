@@ -165,6 +165,14 @@ class SignalsController extends ApiController
      *     default=null
      * )
      * @SWG\Parameter(
+     *     name="sourceParams",
+     *     in="query",
+     *     type="string",
+     *     description="Comma-separated list of additional datasource-specific parameters",
+     *     required=false,
+     *     default=null
+     * )
+     * @SWG\Parameter(
      *     name="maxPoints",
      *     in="query",
      *     type="integer",
@@ -254,6 +262,7 @@ class SignalsController extends ApiController
                                 new RequestParameter('from', RequestParameter::INTEGER, null, true),
                                 new RequestParameter('until', RequestParameter::INTEGER, null, true),
                                 new RequestParameter('datasource', RequestParameter::STRING, null, false),
+                                new RequestParameter('sourceParams', RequestParameter::STRING, null, false),
                                 new RequestParameter('maxPoints', RequestParameter::INTEGER, null, false),
                             ],
                             $request
@@ -266,7 +275,8 @@ class SignalsController extends ApiController
         $from = $env->getParam('from');
         $until = $env->getParam('until');
         $datasource_str = $env->getParam('datasource');
-        $maxPoints = $env->getParam('maxPoints');
+	$maxPoints = $env->getParam('maxPoints');
+	$extraParams = $env->getParam('sourceParams');
         $metas = $this->metadataService->search($entityType, $entityCode);
 
         /* Mildly dirty hack added by Shane to provide a "default"
@@ -314,7 +324,7 @@ class SignalsController extends ApiController
         $ts_sets = [];
         $perf = null;
         try{
-            [$ts_sets, $perf] = $this->signalsService->queryForAll($from, $until, $entities, $datasource_array, $maxPoints);
+            [$ts_sets, $perf] = $this->signalsService->queryForAll($from, $until, $entities, $datasource_array, $maxPoints, $extraParams);
         } catch (BackendException $ex) {
             $env->setError($ex->getMessage());
         }

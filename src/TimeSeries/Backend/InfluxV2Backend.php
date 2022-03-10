@@ -80,7 +80,10 @@ class InfluxV2Backend
     }
 
     private function parseReturnValue($responseJson) {
-        $res_array = [];
+	$res_array = [];
+        if (!array_key_exists("results", $responseJson)) {
+	    return $res_array;
+	}
         foreach($responseJson["results"] as $entityCode => $res) {
             $raw_values = $res["frames"][0]["data"]["values"];
             if(count($raw_values)!=2){
