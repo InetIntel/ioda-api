@@ -254,10 +254,11 @@ class SignalsService
      * @param array $entities
      * @param array $datasources
      * @param int|null $maxPoints
+     * @param string|null $extraParams
      * @return array
      * @throws BackendException
      */
-    public function queryForAll(QueryTime $from, QueryTime $until, array $entities, array $datasources, ?int $maxPoints): array
+    public function queryForAll(QueryTime $from, QueryTime $until, array $entities, array $datasources, ?int $maxPoints, ?string $extraParams): array
     {
         $ts_array = [];
 
@@ -275,7 +276,8 @@ class SignalsService
 
             $step = $this->calculateStep($from, $until, $maxPoints, $datasource->getNativeStep());
             $from = $this->roundDownFromTs($from, $step);
-            $arr = $this->queryForInfluxV2($ds, $entities, $from, $until, $step);
+            $arr = $this->queryForInfluxV2($ds, $entities, $from, $until, $step,
+                        $extraParams);
 
             $perf[] = [
                 "datasource"=>$ds,
@@ -338,9 +340,9 @@ class SignalsService
     /**
      * @throws BackendException
      */
-    public function queryForInfluxV2(string $datasource, array $entities, QueryTime $from, QueryTime $until, int $step): array
+    public function queryForInfluxV2(string $datasource, array $entities, QueryTime $from, QueryTime $until, int $step, ?string $extraParam): array
     {
-        $query = $this->influxService->buildFluxQuery($datasource, $entities, $from, $until, $step);
+        $query = $this->influxService->buildFluxQuery($datasource, $entities, $from, $until, $step, $extraParam);
         return $this -> influxV2Backend -> queryInfluxV2($query);
     }
 }

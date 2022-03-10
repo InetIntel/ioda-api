@@ -193,8 +193,43 @@ class InfluxService
             "datasource_id" => 1,
             "field" => "uniq_src_ip",
             "bucket" => "ioda_merit_nt_non_erratic",
+        ],
+        "gtr" => [
+            "country" => [
+                "measurement" => "google_tr",
+                "code_field" => "country_code",
+                "extra" => " and r.product == \"WEB_SEARCH\"",
+                "aggr" => "|> group() |> aggregateWindow(every: 30m, fn:sum) ",
+            ],
+            "datasource_id" => 1,
+            "field" => "traffic",
+            "bucket" => "ioda_gtr",
         ]
     ];
+
+    private function generateGTRProductClause(?string $params) {
+        if ($params == null) {
+            return " and r.product == \"WEB_SEARCH\"";
+        }
+        $products = explode(",", $params);
+        if (count($products) == 0) {
+            return " and r.product == \"WEB_SEARCH\"";
+        }
+
+        $clause = " and ( ";
+        foreach($products as $p) {
+            $p = strtoupper($p);
+            if ($p == "SEARCH") {
+                $p = "WEB_SEARCH";
+            } else if ($p == "MAIL") {
+                $p = "GMAIL";
+            }
+            $clause .= "r.product == \"$p\" or ";
+        }
+        $clause = substr($clause, 0, -3);
+        $clause .= ") ";
+        return $clause;
+    }
 
     /**
      * Build Flux query for BGP data source.
@@ -203,15 +238,37 @@ class InfluxService
      * @param string $entityCode
      * @return array|string|string[]
      */
-    public function buildFluxQuery(string $datasource, array $entities, QueryTime $from, QueryTime $until, int $step)
+    public function buildFluxQuery(string $datasource, array $entities, QueryTime $from, QueryTime $until, int $step, ?string $extraParams)
     {
+        $from_ts = $from->getEpochTime()*1000;
+        $until_ts = $until->getEpochTime()*1000;
+
+        $query = <<<END
+{
+  "queries": [
+  ],
+  "from": "$from_ts",
+  "to": "$until_ts"
+}
+END;
+        if (count($entities) == 0) {
+            return $query;
+        }
+
         $entityType = $entities[0]->getType()->getType();
+        if (! array_key_exists($entityType, self::FIELD_MAP[$datasource]) ) {
+            return $query;
+        }
 
         $field = self::FIELD_MAP[$datasource]["field"];
         $code_field =  self::FIELD_MAP[$datasource]["$entityType"]["code_field"];
         $measurement = self::FIELD_MAP[$datasource]["$entityType"]["measurement"];
         $bucket = self::FIELD_MAP[$datasource]["bucket"];
-        $extra = self::FIELD_MAP[$datasource]["$entityType"]["extra"];
+        if ($datasource == "gtr" && $extraParams != null) {
+            $extra = $this->generateGTRProductClause($extraParams);
+        } else {
+            $extra = self::FIELD_MAP[$datasource]["$entityType"]["extra"];
+        }
         $aggr = self::FIELD_MAP[$datasource]["$entityType"]["aggr"];
 
         $datasource_id = self::FIELD_MAP[$datasource]["datasource_id"];
@@ -254,8 +311,6 @@ END;
 
         $combined_queries = implode(",", $queries);
 
-        $from_ts = $from->getEpochTime()*1000;
-        $until_ts = $until->getEpochTime()*1000;
 
         $query = <<<END
 {
