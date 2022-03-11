@@ -247,19 +247,19 @@ class OutagesController extends ApiController
      * For example, the following GET request will return alerts generated in
      * the U.S. between 10:00:00 to 11:00:00 on Jan 10, 2019:
      * </p>
-     * <pre>/outages/alerts/country/US?from=1547114400&until=1547118000</pre>
+     * <pre>/outages/alerts/?entityType=country&entityCode=US&from=1547114400&until=1547118000</pre>
      *
      * </p>
      * The following GET request will return alerts generated in AS 3307 between
      * 10:00:00 to 11:00:00 on Jan 10, 2019::
      * </p>
-     * <pre>/outages/alerts/asn/3307?from=1547114400&until=1547118000</pre>
+     * <pre>/outages/alerts?entityType=asn&entityCode=3307&from=1547114400&until=1547118000</pre>
      *
-     * @Route("/alerts/{entityType}/{entityCode}", methods={"GET"}, name="alerts", defaults={"entityType"=null,"entityCode"=null})
+     * @Route("/alerts", methods={"GET"}, name="alerts")
      * @SWG\Tag(name="Outages")
      * @SWG\Parameter(
      *     name="entityType",
-     *     in="path",
+     *     in="query",
      *     type="string",
      *     description="Type of the entity, e.g. country, region, asn",
      *     enum={"continent", "country", "region", "county", "asn"},
@@ -268,7 +268,7 @@ class OutagesController extends ApiController
      * )
      * @SWG\Parameter(
      *     name="entityCode",
-     *     in="path",
+     *     in="query",
      *     type="string",
      *     description="Code of the entity, e.g. for United States the code is 'US'; use comma ',' to separate multiple codes",
      *     required=false,
@@ -373,14 +373,11 @@ class OutagesController extends ApiController
      *     )
      * )
      *
-     * @var string|null $entityType
-     * @var string|null $entityCode
      * @var Request $request
      * @var SerializerInterface $serializer
      * @return JsonResponse
      */
     public function alerts(
-        ?string $entityType, ?string $entityCode,
         Request $request,
         SerializerInterface $serializer,
         OutagesAlertsService $alertService
@@ -391,9 +388,11 @@ class OutagesController extends ApiController
                 new RequestParameter('from', RequestParameter::STRING, null, true),
                 new RequestParameter('until', RequestParameter::STRING, null, true),
                 new RequestParameter('datasource', RequestParameter::STRING, null, false),
-                new RequestParameter('limit', RequestParameter::INTEGER, null, false),
+                new RequestParameter('limit', RequestParameter::INTEGER, 2000, false),
                 new RequestParameter('page', RequestParameter::INTEGER, null, false),
                 new RequestParameter('relatedTo', RequestParameter::STRING, null, false),
+                new RequestParameter('entityType', RequestParameter::STRING, null, false),
+                new RequestParameter('entityCode', RequestParameter::STRING, null, false),
             ],
             $request
         );
@@ -403,7 +402,9 @@ class OutagesController extends ApiController
         $until = $this->parseTimestampParameter($env->getParam('until'));
         $datasource = $env->getParam('datasource');
         $limit = $env->getParam('limit');
-        $page = $env->getParam('page');
+	$page = $env->getParam('page');
+	$entityType = $env->getParam('entityType');
+	$entityCode = $env->getParam('entityCode');
         $relatedTo = $this->parseRelatedTo($env->getParam('relatedTo'));
 
         /* SANTIY CHECKS */
@@ -468,7 +469,7 @@ class OutagesController extends ApiController
      * <p>
      * The following GET request will return events detected in the U.S.
      * between 10:00:00 to 11:00:00 on Jan 10, 2019:
-     * <pre>/outages/events/country/US?from=1561579200&until=1561590000</pre>
+     * <pre>/outages/events?entityType=country&entityCode=US&from=1561579200&until=1561590000</pre>
      * </p>
      *
      * <h3> Finding Events By ASN </h3>
@@ -476,14 +477,14 @@ class OutagesController extends ApiController
      * <p>
      * The following GET request will return events detected in AS 3307.
      * between 10:00:00 to 11:00:00 on Jan 10, 2019:
-     * <pre>/outages/events/asn/3307?from=1561579200&until=1561590000</pre>
+     * <pre>/outages/events?entityType=asn&entityCode=3307&from=1561579200&until=1561590000</pre>
      * </p>
      *
-     * @Route("/events/{entityType}/{entityCode}", methods={"GET"}, name="events", defaults={"entityType"=null,"entityCode"=null})
+     * @Route("/events", methods={"GET"}, name="events")
      * @SWG\Tag(name="Outages")
      * @SWG\Parameter(
      *     name="entityType",
-     *     in="path",
+     *     in="query",
      *     type="string",
      *     description="Type of the entity, e.g. country, region, asn",
      *     enum={"continent", "country", "region", "county", "asn"},
@@ -492,7 +493,7 @@ class OutagesController extends ApiController
      * )
      * @SWG\Parameter(
      *     name="entityCode",
-     *     in="path",
+     *     in="query",
      *     type="string",
      *     description="Code of the entity, e.g. for United States the code is 'US'; use comma ',' to separate multiple codes",
      *     required=false,
@@ -534,7 +535,8 @@ class OutagesController extends ApiController
      *     in="query",
      *     type="integer",
      *     description="Maximum number of events this query returns",
-     *     required=false
+     *     required=false,
+     *     default=2000,
      * )
      * @SWG\Parameter(
      *     name="page",
@@ -630,15 +632,12 @@ class OutagesController extends ApiController
      * )
      * TODO: figure out how to document ioda format here as well
      *
-     * @var string|null $entityType
-     * @var string|null $entityCode
      * @var Request $request
      * @var SerializerInterface $serializer
      * @var OutagesEventsService
      * @return JsonResponse
      */
     public function events(
-        ?string $entityType, ?string $entityCode,
         Request $request,
         SerializerInterface $serializer,
         OutagesEventsService $eventsService,
@@ -652,9 +651,11 @@ class OutagesController extends ApiController
                 new RequestParameter('datasource', RequestParameter::STRING, null, false),
                 new RequestParameter('includeAlerts', RequestParameter::BOOL, false, false),
                 new RequestParameter('format', RequestParameter::STRING, "codf", false),
-                new RequestParameter('limit', RequestParameter::INTEGER, null, false),
+                new RequestParameter('limit', RequestParameter::INTEGER, 2000, false),
                 new RequestParameter('page', RequestParameter::INTEGER, null, false),
                 new RequestParameter('relatedTo', RequestParameter::STRING, null, false),
+                new RequestParameter('entityType', RequestParameter::STRING, null, false),
+                new RequestParameter('entityCode', RequestParameter::STRING, null, false),
                 new RequestParameter('orderBy', RequestParameter::STRING, null, false),
                 new RequestParameter('overall', RequestParameter::BOOL, false, false),
             ],
@@ -668,7 +669,9 @@ class OutagesController extends ApiController
         $includeAlerts = $env->getParam('includeAlerts');
         $format = $env->getParam('format');
         $limit = $env->getParam('limit');
-        $page = $env->getParam('page');
+	$page = $env->getParam('page');
+	$entityType = $env->getParam('entityType');
+	$entityCode = $env->getParam('entityCode');
         $orderBy = $this->parseOrderBy($env->getParam('orderBy'), "events");
         $relatedTo = $this->parseRelatedTo($env->getParam('relatedTo'));
         $overall = $env->getParam('overall');
@@ -711,11 +714,11 @@ class OutagesController extends ApiController
      * in summary is the sum of the scores for all merged events.
      * <p>
      *
-     * @Route("/summary/{entityType}/{entityCode}", methods={"GET"}, name="summary", defaults={"entityType"=null,"entityCode"=null})
+     * @Route("/summary", methods={"GET"}, name="summary")
      * @SWG\Tag(name="Outages")
      * @SWG\Parameter(
      *     name="entityType",
-     *     in="path",
+     *     in="query",
      *     type="string",
      *     description="Type of the entity, e.g. country, region, asn",
      *     enum={"continent", "country", "region", "county", "asn"},
@@ -724,7 +727,7 @@ class OutagesController extends ApiController
      * )
      * @SWG\Parameter(
      *     name="entityCode",
-     *     in="path",
+     *     in="query",
      *     type="string",
      *     description="Code of the entity, e.g. for United States the code is 'US'; use comma ',' to separate multiple codes",
      *     required=false,
@@ -749,7 +752,8 @@ class OutagesController extends ApiController
      *     in="query",
      *     type="integer",
      *     description="Maximum number of entity summaries this query returns",
-     *     required=false
+     *     required=false,
+     *     default=2000
      * )
      * @SWG\Parameter(
      *     name="page",
@@ -828,15 +832,12 @@ class OutagesController extends ApiController
      *     )
      * )
      *
-     * @var string|null $entityType
-     * @var string|null $entityCode
      * @var Request $request
      * @var SerializerInterface $serializer
      * @var OutagesEventsService
      * @return JsonResponse
      */
     public function summary(
-        ?string $entityType, ?string $entityCode,
         Request $request,
         SerializerInterface $serializer,
         OutagesEventsService $eventsService,
@@ -847,9 +848,11 @@ class OutagesController extends ApiController
             [
                 new RequestParameter('from', RequestParameter::STRING, null, true),
                 new RequestParameter('until', RequestParameter::STRING, null, true),
-                new RequestParameter('limit', RequestParameter::INTEGER, null, false),
+                new RequestParameter('limit', RequestParameter::INTEGER, 2000, false),
                 new RequestParameter('page', RequestParameter::INTEGER, null, false),
                 new RequestParameter('relatedTo', RequestParameter::STRING, null, false),
+                new RequestParameter('entityType', RequestParameter::STRING, null, false),
+                new RequestParameter('entityCode', RequestParameter::STRING, null, false),
                 new RequestParameter('orderBy', RequestParameter::STRING, null, false),
             ],
             $request
@@ -859,7 +862,9 @@ class OutagesController extends ApiController
         $from = $this->parseTimestampParameter($env->getParam('from'));
         $until = $this->parseTimestampParameter($env->getParam('until'));
         $limit = $env->getParam('limit');
-        $page = $env->getParam('page');
+	$page = $env->getParam('page');
+	$entityType = $env->getParam('entityType');
+	$entityCode = $env->getParam('entityCode');
         $orderBy = $this->parseOrderBy($env->getParam('orderBy'), "summary");
         $relatedTo = $this->parseRelatedTo($env->getParam('relatedTo'));
 
