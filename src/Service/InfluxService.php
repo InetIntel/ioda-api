@@ -286,7 +286,8 @@ from(bucket: "$bucket")
     $extra
   )
   $aggr
-  |> aggregateWindow(every: ${step}s, fn: mean, createEmpty: true)
+  |> aggregateWindow(every: ${step}s, fn: mean, timeSrc: "_start",
+    createEmpty: true)
   |> yield(name: "mean")
 END;
             $q = str_replace("\n", '', $q);
