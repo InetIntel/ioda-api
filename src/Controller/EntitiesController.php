@@ -102,23 +102,23 @@ class EntitiesController extends ApiController
      * <h2> Usage examples </h2>
      *
      * To get information about United States, use the following query:
-     * <pre>/entities/?entityType=country&entityCode=US</pre>
+     * <pre>/entities/query?entityType=country&entityCode=US</pre>
      *
      * </br>
      *
      * To search for entities whose name contains the word "united", use the following query
-     * <pre>/entities?search=united</pre>
+     * <pre>/entities/query?search=united</pre>
      * To narrow down the previous search for only the countries, use the following query
-     * <pre>/entities/?entityType=country&search=united</pre>
+     * <pre>/entities/query?entityType=country&search=united</pre>
      *
      * </br>
      *
      * For more advanced search, you can also use the <b>relatedTo</b> parameter. It takes a entity type and code
      * separated by <b>/</b>.
      * For example, to search for all ASes operate in New Zealand, use the following query:
-     * <pre><code>/entities/?entityType=asn&relatedTo=country/NZ</code></pre>
+     * <pre><code>/entities/query?entityType=asn&relatedTo=country/NZ</code></pre>
      *
-     * @Route("/", methods={"GET"}, name="get")
+     * @Route("/query", methods={"GET"}, name="get")
      * @SWG\Tag(name="Metadata Entities")
      * @SWG\Parameter(
      *     name="entityType",
