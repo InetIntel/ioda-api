@@ -238,7 +238,7 @@ class InfluxService
                 "extra" => " and r.product == \"WEB_SEARCH\"",
                 "aggr" => "|> group() |> aggregateWindow(every: 30m, fn:sum) ",
             ],
-            "datasource_id" => 1,
+            "datasource_id" => 4,
             "field" => "traffic",
             "bucket" => "ioda_gtr",
         ]
