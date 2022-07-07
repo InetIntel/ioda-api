@@ -227,7 +227,7 @@ class InfluxService
                 "extra" => "",
                 "aggr" => "",
             ],
-            "datasource_id" => 1,
+            "datasource_id" => 2,
             "field" => "uniq_src_ip",
             "bucket" => "ioda_merit_nt_non_erratic",
         ],
