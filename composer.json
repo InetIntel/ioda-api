@@ -10,7 +10,7 @@
         "doctrine/doctrine-bundle": "^1.10",
         "doctrine/doctrine-migrations-bundle": "^2.0",
         "doctrine/orm": "^2.6",
-        "nelmio/api-doc-bundle": "^3.3",
+        "nelmio/api-doc-bundle": "^3.10.0",
         "nelmio/cors-bundle": "^1.5",
         "sensio/framework-extra-bundle": "^5.2",
         "symfony/asset": "*",
