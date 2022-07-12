@@ -137,9 +137,6 @@
     "psr/log": {
         "version": "1.0.2"
     },
-    "psr/simple-cache": {
-        "version": "1.0.1"
-    },
     "ralouphie/getallheaders": {
         "version": "2.0.5"
     },
@@ -233,9 +230,6 @@
     "symfony/options-resolver": {
         "version": "v4.0.9"
     },
-    "symfony/orm-pack": {
-        "version": "v1.0.5"
-    },
     "symfony/polyfill-ctype": {
         "version": "v1.8.0"
     },
@@ -244,9 +238,6 @@
     },
     "symfony/polyfill-php72": {
         "version": "v1.8.0"
-    },
-    "symfony/profiler-pack": {
-        "version": "v1.0.3"
     },
     "symfony/property-access": {
         "version": "v4.1.6"
