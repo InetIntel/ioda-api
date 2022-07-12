@@ -71,9 +71,6 @@
     "doctrine/reflection": {
         "version": "v1.0.0"
     },
-    "exsyst/swagger": {
-        "version": "v0.4.0"
-    },
     "firebase/php-jwt": {
         "version": "v5.0.0"
     },
@@ -90,13 +87,17 @@
         "version": "v1.2.17"
     },
     "nelmio/api-doc-bundle": {
-        "version": "3.0",
+        "version": "3.10",
         "recipe": {
             "repo": "github.com/symfony/recipes-contrib",
-            "branch": "master",
+            "branch": "main",
             "version": "3.0",
             "ref": "c8e0c38e1a280ab9e37587a8fa32b251d5bc1c94"
-        }
+        },
+        "files": [
+            "config/packages/nelmio_api_doc.yaml",
+            "config/routes/nelmio_api_doc.yaml"
+        ]
     },
     "nelmio/cors-bundle": {
         "version": "1.5",
@@ -116,15 +117,6 @@
     "ocramius/proxy-manager": {
         "version": "2.2.0"
     },
-    "phpdocumentor/reflection-common": {
-        "version": "1.0.1"
-    },
-    "phpdocumentor/reflection-docblock": {
-        "version": "4.3.0"
-    },
-    "phpdocumentor/type-resolver": {
-        "version": "0.4.0"
-    },
     "psr/cache": {
         "version": "1.0.1"
     },
@@ -136,9 +128,6 @@
     },
     "psr/log": {
         "version": "1.0.2"
-    },
-    "psr/simple-cache": {
-        "version": "1.0.1"
     },
     "ralouphie/getallheaders": {
         "version": "2.0.5"
@@ -230,12 +219,6 @@
             "ref": "fadbfe33303a76e25cb63401050439aa9b1a9c7f"
         }
     },
-    "symfony/options-resolver": {
-        "version": "v4.0.9"
-    },
-    "symfony/orm-pack": {
-        "version": "v1.0.5"
-    },
     "symfony/polyfill-ctype": {
         "version": "v1.8.0"
     },
@@ -245,14 +228,8 @@
     "symfony/polyfill-php72": {
         "version": "v1.8.0"
     },
-    "symfony/profiler-pack": {
-        "version": "v1.0.3"
-    },
     "symfony/property-access": {
         "version": "v4.1.6"
-    },
-    "symfony/property-info": {
-        "version": "v4.0.9"
     },
     "symfony/routing": {
         "version": "4.0",
@@ -323,16 +300,10 @@
     "twig/twig": {
         "version": "v2.4.8"
     },
-    "webmozart/assert": {
-        "version": "1.3.0"
-    },
     "zendframework/zend-code": {
         "version": "3.3.0"
     },
     "zendframework/zend-eventmanager": {
         "version": "3.2.1"
-    },
-    "zircote/swagger-php": {
-        "version": "2.0.13"
     }
 }

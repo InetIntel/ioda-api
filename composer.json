@@ -7,7 +7,10 @@
         "ext-iconv": "*",
         "ext-json": "^1.6",
         "auth0/jwt-auth-bundle": "^3.1",
-        "nelmio/api-doc-bundle": "^3.3",
+        "doctrine/doctrine-bundle": "^1.10",
+        "doctrine/doctrine-migrations-bundle": "^2.0",
+        "doctrine/orm": "^2.6",
+        "nelmio/api-doc-bundle": "^3.10.0",
         "nelmio/cors-bundle": "^1.5",
         "sensio/framework-extra-bundle": "^5.2",
         "symfony/asset": "*",
@@ -15,7 +18,7 @@
         "symfony/dotenv": "*",
         "symfony/flex": "^1.1",
         "symfony/framework-bundle": "*",
-        "symfony/orm-pack": "*",
+        "symfony/proxy-manager-bridge": "4.4.*",
         "symfony/security-bundle": "*",
         "symfony/serializer": "*",
         "symfony/twig-bundle": "*",
@@ -23,7 +26,8 @@
     },
     "require-dev": {
         "symfony/maker-bundle": "*",
-        "symfony/profiler-pack": "*"
+        "symfony/stopwatch": "4.4.*",
+        "symfony/web-profiler-bundle": "4.4.*"
     },
     "config": {
         "preferred-install": {
@@ -65,7 +69,7 @@
     "extra": {
         "symfony": {
             "allow-contrib": false,
-            "require": "4.2.*"
+            "require": "4.4.*"
         }
     }
 }
