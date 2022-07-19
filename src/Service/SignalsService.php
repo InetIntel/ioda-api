@@ -324,18 +324,20 @@ class SignalsService
 
             // post-processing
             foreach(array_keys($arr) as $code){
-                $ts = $arr[$code];
-                $ts -> setMetadataEntity($entityMap[$code]);
+		$ts = $arr[$code];
+                list($entityCode, $subType) = array_pad(explode("|->", $code), 2, '');
+                $ts -> setMetadataEntity($entityMap[$entityCode]);
                 $ts -> setNativeStep($datasource->getNativeStep());
                 if(count($ts -> getValues()) <= 2) {
                     // not enough to calculate a true step, use native step instead
                     $ts->setStep($ts-> getNativeStep());
                 }
-                $ts -> setDatasource($datasource->getDatasource());
-                if(!array_key_exists($code, $ts_array)){
-                    $ts_array[$code] = [];
+		$ts -> setDatasource($datasource->getDatasource());
+		$ts -> setSubtype($subType);
+                if(!array_key_exists($entityCode, $ts_array)){
+                    $ts_array[$entityCode] = [];
                 }
-                $ts_array[$code][] = $ts;
+                $ts_array[$entityCode][] = $ts;
             }
         }
 
@@ -344,8 +346,8 @@ class SignalsService
             $ts_set = new TimeSeriesSet();
             $ts_set->setMetadataEntity($entity);
 
-            $code = $entity->getCode();
-            if(array_key_exists($code, $ts_array)){
+	    $code = $entity->getCode();
+	    if(array_key_exists($code, $ts_array)){
                 foreach($ts_array[$code] as $ts){
                     $ts_set->addOneSeries($ts);
                 }

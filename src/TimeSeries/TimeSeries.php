@@ -107,6 +107,16 @@ class TimeSeries
      */
     protected $metadataEntity;
 
+
+    /**
+     * Some data sources have multiple metrics (e.g. GTR) -- this field
+     * is used to distinguish between them.
+     *
+     * @var string
+     *  @Groups("public")
+     */
+    protected $subType;
+
     public function setDatasource(string $datasource)
     {
         $this->datasource = $datasource;
@@ -115,6 +125,16 @@ class TimeSeries
     public function getDatasource(): string
     {
         return $this->datasource;
+    }
+
+    public function setSubtype(string $subtype)
+    {
+	$this->subType = $subtype;
+    }
+
+    public function getSubtype(): string
+    {
+	return $this->subType;
     }
 
     public function setMetadataEntity(MetadataEntity $metadataEntity)
