@@ -164,6 +164,7 @@ class OutagesBackend
         $newSeries->setUntil($until_ts);
         $newSeries->setStep($step);
         $newSeries->setValues($values);
+	$newSeries->setSubtype("");
 
         return $newSeries;
     }
