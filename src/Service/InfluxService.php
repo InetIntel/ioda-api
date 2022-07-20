@@ -244,15 +244,61 @@ class InfluxService
         ]
     ];
 
+    private function buildGTRBlendFluxQueries(array $entities, int $step,
+            int $datasource_id, string $field, string $code_field,
+	    string $measurement, string $bucket)
+    {
+	$fluxQueries = [];
+        
+
+        foreach($entities as $entity){
+            $entityCode = $entity->getCode();
+	    $ent_index = $entityCode . "|->BLENDED";
+            $q = <<< END
+from(bucket: "$bucket")
+  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)
+  |> filter(fn: (r) =>
+    r._measurement == "$measurement" and
+    r._field == "$field" and
+    r.$code_field == "$entityCode" and
+    (r.product == "WEB_SEARCH" or r.product == "GMAIL" or r.product == "MAPS")
+  )
+  |> group() |> aggregateWindow(every: 30m, fn: sum)
+  |> aggregateWindow(every: ${step}s, fn: mean, timeSrc: "_start",
+    createEmpty: true)
+  |> yield(name: "mean")
+END;
+            $q = str_replace("\n", '', $q);
+            $q = str_replace("\"", '\\"', $q);
+            $fluxQueries[$ent_index] = $q;
+	}
+
+        $queries = [];
+        foreach($fluxQueries as $entityCode => $fluxQuery){
+            // NOTE: the maxDataPoints needs to be set to a very large value to avoid grafana stripping data off
+            //       currently set to be 31536000, which should be equivalent to 10 years
+            $queries[] = <<<END
+    {
+      "query": "$fluxQuery",
+      "refId":"$entityCode",
+      "datasourceId": $datasource_id,
+      "intervalMs": 60000,
+      "maxDataPoints": 31536000
+    }
+END;
+	}
+	return $queries;
+    }
+
     private function buildGTRFluxQueries(array $entities, int $step,
 	    int $datasource_id, string $field, string $code_field,
 	    string $measurement,
-	    string $bucket, string $aggr, ?string $productList)
+	    string $bucket, ?string $productList)
     {
 
         $fluxQueries = [];
 	if ($productList == null) {
-	    $products = ["WEB_SEARCH"];
+	    return [];
 	} else {
 	    $products = explode(",", $productList);
 	}
@@ -276,7 +322,6 @@ from(bucket: "$bucket")
     r.$code_field == "$entityCode" and
     r.product == "$prod"
   )
-  $aggr
   |> aggregateWindow(every: ${step}s, fn: mean, timeSrc: "_start",
     createEmpty: true)
   |> yield(name: "mean")
@@ -386,10 +431,16 @@ END;
 
         $datasource_id = self::FIELD_MAP[$datasource]["datasource_id"];
 
-	if ($datasource == "gtr") {
+	if ($datasource == "gtr" && $extraParams != null) {
+
             $queries = $this->buildGTRFluxQueries($entities, $step,
                     $datasource_id, $field, $code_field, $measurement,
-                    $bucket, $aggr, $extraParams);
+                    $bucket, $extraParams);
+	} else if ($datasource == "gtr") {
+
+            $queries = $this->buildGTRBlendFluxQueries($entities, $step,
+                    $datasource_id, $field, $code_field, $measurement,
+                    $bucket);
 	} else {
 	    $queries = $this->buildStandardFluxQueries($entities, $step,
 		    $datasource_id, $field, $code_field, $measurement,
