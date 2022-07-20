@@ -96,7 +96,13 @@ class TimeSeriesSet
      */
     public function addOneSeries(TimeSeries $series): void
     {
-        $this->series[$series->getDatasource()] = $series;
+	$subtype = $series->getSubtype();
+	if ($subtype == "") {
+	    $key = $series->getDatasource();
+	} else {
+	    $key = $series->getDatasource() . "--" . $subtype;
+	}
+	$this->series[$key] = $series;
     }
 
     /**

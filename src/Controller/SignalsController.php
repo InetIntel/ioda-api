@@ -361,7 +361,7 @@ class SignalsController extends ApiController
         $ts_sets = [];
         $perf = null;
         try{
-            [$ts_sets, $perf] = $this->signalsService->queryForAll($from, $until, $entities, $datasource_array, $maxPoints, $extraParams);
+		[$ts_sets, $perf] = $this->signalsService->queryForAll($from, $until, $entities, $datasource_array, $maxPoints, $extraParams);
         } catch (BackendException $ex) {
             $env->setError($ex->getMessage());
         }
