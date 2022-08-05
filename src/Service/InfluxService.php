@@ -157,7 +157,7 @@ class InfluxService
                 "extra" => "",
                 "aggr" => "",
             ],
-            "datasource_id" => 1,
+            "datasource_id" => 3,
             "field" => "up_slash24_cnt",
             "bucket" => "ioda_trinocular_summed",
         ],
