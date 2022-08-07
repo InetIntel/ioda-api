@@ -122,7 +122,7 @@ class InfluxService
                 "extra" => self::BGP_EXTRA_CLAUSE,
                 "aggr" => "",
             ],
-            "datasource_id" => 1,
+            "datasource_id" => 5,
             "field" => "visible_slash24_cnt",
             "bucket" => "ioda_bgp",
         ],
