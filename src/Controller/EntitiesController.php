@@ -273,20 +273,24 @@ class EntitiesController extends ApiController
          * postgres database, but I'm just making sure they are set to
          * something in case some other code requires them to be set.
          */
-        if ($entity == null && $entityType == "asn") {
-            $defaultAsn = new MetadataEntity();
-            $defaultAsnMetatype = new MetadataEntityType();
+	if ($entity == null && $entityType == "asn") {
+	    if ($entityCode == null) {
+		$entity = [];
+	    } else {
+                $defaultAsn = new MetadataEntity();
+                $defaultAsnMetatype = new MetadataEntityType();
 
-            $defaultAsnMetatype->setId(8);
-            $defaultAsnMetatype->setType("asn");
-            $defaultAsn->setCode($entityCode);
-            $defaultAsn->setName(sprintf("AS%d", $entityCode));
-            $defaultAsn->setId(1001);
-            $defaultAsn->setType($defaultAsnMetatype);
-            $defaultAsn->setFQID(sprintf("asn.%d", $entityCode));
-            $defaultAsn->setIpCount(0);
+                $defaultAsnMetatype->setId(8);
+                $defaultAsnMetatype->setType("asn");
+                $defaultAsn->setCode($entityCode);
+                $defaultAsn->setName(sprintf("AS%d", $entityCode));
+                $defaultAsn->setId(1001);
+                $defaultAsn->setType($defaultAsnMetatype);
+                $defaultAsn->setFQID(sprintf("asn.%d", $entityCode));
+                $defaultAsn->setIpCount(0);
 
-            $entity = [$defaultAsn];
+		$entity = [$defaultAsn];
+	    }
         }
 
         $env->setData($entity);
