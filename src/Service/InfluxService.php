@@ -244,17 +244,12 @@ class InfluxService
         ]
     ];
 
-    private function buildGTRBlendFluxQueries(array $entities, int $step,
-            int $datasource_id, string $field, string $code_field,
-	    string $measurement, string $bucket)
+    private function buildGTRBlendFluxSingleQuery(string $entityCode,
+	    int $step, string $field,
+	    string $code_field, string $measurement, string $bucket)
     {
-	$fluxQueries = [];
-        
 
-        foreach($entities as $entity){
-            $entityCode = $entity->getCode();
-	    $ent_index = $entityCode . "|->BLENDED";
-            $q = <<< END
+        $q = <<< END
 from(bucket: "$bucket")
   |> range(start: v.timeRangeStart, stop:v.timeRangeStop)
   |> filter(fn: (r) =>
@@ -268,8 +263,24 @@ from(bucket: "$bucket")
     createEmpty: true)
   |> yield(name: "mean")
 END;
-            $q = str_replace("\n", '', $q);
-            $q = str_replace("\"", '\\"', $q);
+        $q = str_replace("\n", '', $q);
+	$q = str_replace("\"", '\\"', $q);
+
+	return $q;
+    }
+
+    private function buildGTRBlendFluxQueries(array $entities, int $step,
+            int $datasource_id, string $field, string $code_field,
+	    string $measurement, string $bucket)
+    {
+	$fluxQueries = [];
+        
+
+        foreach($entities as $entity){
+            $entityCode = $entity->getCode();
+	    $ent_index = $entityCode . "|->BLENDED";
+	    $q = $this->buildGTRBlendFluxSingleQuery($entityCode, $step,
+		    $field, $code_field, $measurement, $bucket);
             $fluxQueries[$ent_index] = $q;
 	}
 
@@ -313,7 +324,13 @@ END;
 		    $prod = "GMAIL";
 		}
 		$ent_index = $entityCode . "|->" . $prod;
-                $q = <<< END
+
+		if ($prod == "BLENDED") {
+			$q = $this->buildGTRBlendFluxSingleQuery($entityCode,
+				$step, $field, $code_field, $measurement,
+				$bucket);
+		} else {
+                    $q = <<< END
 from(bucket: "$bucket")
   |> range(start: v.timeRangeStart, stop:v.timeRangeStop)
   |> filter(fn: (r) =>
@@ -326,8 +343,10 @@ from(bucket: "$bucket")
     createEmpty: true)
   |> yield(name: "mean")
 END;
-                $q = str_replace("\n", '', $q);
-                $q = str_replace("\"", '\\"', $q);
+                    $q = str_replace("\n", '', $q);
+                    $q = str_replace("\"", '\\"', $q);
+		}
+
                 $fluxQueries[$ent_index] = $q;
             }
 	}
