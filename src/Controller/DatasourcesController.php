@@ -153,7 +153,7 @@ class DatasourcesController extends ApiController
      * <ul>
      *     <li>
      *         We analyze traffic data from both the <a href=https://www.caida.org/projects/network_telescope/>UCSD</a> and <a href=https://www.merit.edu/a-data-repository-for-cyber-security-research-and-education/>Merit</a> Network Telescopes.
-     *         (Currently IODA uses only data from the UCSD Telescope for generating alerts.)
+     *         (Currently IODA uses only data from the Merit Telescope for generating alerts.)
      *     </li>
      *     <li>
      *         We apply <a href=http://www.caida.org/publications/papers/2014/passive_ip_space_usage_estimation/>anti-spoofing heuristics and noise reduction filters</a> to the
