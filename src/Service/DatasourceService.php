@@ -101,6 +101,13 @@ class DatasourceService
                 1800,
                 "influxv2"
             ),
+            "gtr-norm" => new DatasourceEntity(
+                "gtr-norm",
+                "Google Transparency Report (Normalized)",
+                "Normalized Traffic",
+                1800,
+                "influxv2"
+            ),
             /* XXX NOTE, merit measurements are every 60 seconds, but
              * Alberto has requested that we use a 300 second step for now.
              * This means you won't be able to use the API to get the "raw"

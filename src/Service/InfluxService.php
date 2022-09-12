@@ -241,8 +241,42 @@ class InfluxService
             "datasource_id" => 4,
             "field" => "traffic",
             "bucket" => "ioda_gtr",
+        ],
+        "gtr-norm" => [
+            "country" => [
+                "measurement" => "google_tr",
+                "code_field" => "country_code",
+		"extra" => " and r.product == \"WEB_SEARCH\"",
+		"aggr" => "",
+            ],
+            "datasource_id" => 4,
+            "field" => "traffic",
+            "bucket" => "ioda_gtr",
         ]
     ];
+
+    private function buildGTRNormalisedFluxSingleQuery(string $entityCode,
+	    int $step, string $field, string $code_field, string $measurement,
+	    string $bucket, string $prod)
+    {
+	$q = <<< END
+fetched = from(bucket: "$bucket")
+  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)
+  |> filter(fn: (r) =>
+    r._measurement == "$measurement" and
+    r._field == "$field" and
+    r.$code_field == "$entityCode" and
+    (r.product == "$prod")
+  )
+maxprod = fetched |> max() |> findColumn(fn: (key) => true, column: "_value")
+
+fetched |> map(fn: (r) => ({r with _value: r._value / maxprod[0]}))
+        |> aggregateWindow(every: ${step}s, fn: mean, timeSrc: "_start",
+                           createEmpty: true)
+        |> yield(name: "mean")
+END;
+        return $q;
+    }
 
     private function buildGTRBlendFluxSingleQuery(string $entityCode,
 	    int $step, string $field,
@@ -250,7 +284,7 @@ class InfluxService
     {
 
         $q = <<< END
-from(bucket: "$bucket")
+allfetched = from(bucket: "ioda_gtr")
   |> range(start: v.timeRangeStart, stop:v.timeRangeStop)
   |> filter(fn: (r) =>
     r._measurement == "$measurement" and
@@ -258,13 +292,19 @@ from(bucket: "$bucket")
     r.$code_field == "$entityCode" and
     (r.product == "WEB_SEARCH" or r.product == "GMAIL" or r.product == "MAPS")
   )
-  |> group() |> aggregateWindow(every: 30m, fn: sum)
-  |> aggregateWindow(every: ${step}s, fn: mean, timeSrc: "_start",
-    createEmpty: true)
-  |> yield(name: "mean")
+
+maxweb = allfetched |> filter(fn: (r) => r.product == "WEB_SEARCH") |> max() |> findColumn(fn: (key) => true, column: "_value")
+maxmail = allfetched |> filter(fn: (r) => r.product == "GMAIL") |> max() |> findColumn(fn: (key) => true, column: "_value")
+maxmaps = allfetched |> filter(fn: (r) => r.product == "MAPS") |> max() |> findColumn(fn: (key) => true, column: "_value")
+
+allfetched
+  |> pivot(rowKey: ["_time"], columnKey: ["product"], valueColumn: "_value")
+  |> map(fn: (r) => ({r with MAPS: r.MAPS / maxmaps[0]}))
+  |> map(fn: (r) => ({r with GMAIL: r.GMAIL / maxmail[0]}))
+  |> map(fn: (r) => ({r with WEB_SEARCH: r.WEB_SEARCH / maxweb[0]}))
+  |> map(fn: (r) => ({r with _value: (r.MAPS + r.GMAIL + r.WEB_SEARCH) / 3.0}))
+  |> drop(columns: ["MAPS", "GMAIL", "WEB_SEARCH"])
 END;
-        $q = str_replace("\n", '', $q);
-	$q = str_replace("\"", '\\"', $q);
 
 	return $q;
     }
@@ -281,6 +321,9 @@ END;
 	    $ent_index = $entityCode . "|->BLENDED";
 	    $q = $this->buildGTRBlendFluxSingleQuery($entityCode, $step,
 		    $field, $code_field, $measurement, $bucket);
+            $q = str_replace("\n", '', $q);
+            $q = str_replace("\t", '    ', $q);
+            $q = str_replace("\"", '\\"', $q);
             $fluxQueries[$ent_index] = $q;
 	}
 
@@ -301,10 +344,31 @@ END;
 	return $queries;
     }
 
+    private function buildGTRRawFluxSingleQuery(string $entityCode,
+            int $step, string $field,
+	    string $code_field, string $measurement, string $bucket,
+	    string $prod) {
+
+        $q = <<< END
+from(bucket: "$bucket")
+  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)
+  |> filter(fn: (r) =>
+    r._measurement == "$measurement" and
+    r._field == "$field" and
+    r.$code_field == "$entityCode" and
+    r.product == "$prod"
+  )
+  |> aggregateWindow(every: ${step}s, fn: mean, timeSrc: "_start",
+    createEmpty: true)
+  |> yield(name: "mean")
+END;
+	return $q;
+    }
+
     private function buildGTRFluxQueries(array $entities, int $step,
 	    int $datasource_id, string $field, string $code_field,
 	    string $measurement,
-	    string $bucket, ?string $productList)
+	    string $bucket, string $datasource, ?string $productList)
     {
 
         $fluxQueries = [];
@@ -326,32 +390,32 @@ END;
 		$ent_index = $entityCode . "|->" . $prod;
 
 		if ($prod == "BLENDED") {
-			$q = $this->buildGTRBlendFluxSingleQuery($entityCode,
-				$step, $field, $code_field, $measurement,
-				$bucket);
+		    if ($datasource == "gtr") {
+		        continue;
+		    }
+		    $q = $this->buildGTRBlendFluxSingleQuery($entityCode,
+		            $step, $field, $code_field, $measurement,
+			    $bucket);
+		} else if ($datasource == "gtr") {
+                    $q = $this->buildGTRRawFluxSingleQuery($entityCode,
+		            $step, $field, $code_field, $measurement,
+			    $bucket, $prod);
+		} else if ($datasource == "gtr-norm") {
+		    $q = $this->buildGTRNormalisedFluxSingleQuery($entityCode,
+		            $step, $field, $code_field, $measurement,
+			    $bucket, $prod);
 		} else {
-                    $q = <<< END
-from(bucket: "$bucket")
-  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)
-  |> filter(fn: (r) =>
-    r._measurement == "$measurement" and
-    r._field == "$field" and
-    r.$code_field == "$entityCode" and
-    r.product == "$prod"
-  )
-  |> aggregateWindow(every: ${step}s, fn: mean, timeSrc: "_start",
-    createEmpty: true)
-  |> yield(name: "mean")
-END;
-                    $q = str_replace("\n", '', $q);
-                    $q = str_replace("\"", '\\"', $q);
+		    continue;
 		}
 
+                $q = str_replace("\n", ' ', $q);
+                $q = str_replace("\t", '    ', $q);
+                $q = str_replace("\"", '\\"', $q);
                 $fluxQueries[$ent_index] = $q;
             }
 	}
 
-        $queries = [];
+	$queries = [];
         foreach($fluxQueries as $entityCode => $fluxQuery){
             // NOTE: the maxDataPoints needs to be set to a very large value to avoid grafana stripping data off
             //       currently set to be 31536000, which should be equivalent to 10 years
@@ -450,12 +514,13 @@ END;
 
         $datasource_id = self::FIELD_MAP[$datasource]["datasource_id"];
 
-	if ($datasource == "gtr" && $extraParams != null) {
+	if ($datasource == "gtr" or ($datasource == "gtr-norm"
+		&& $extraParams != null)) {
 
             $queries = $this->buildGTRFluxQueries($entities, $step,
                     $datasource_id, $field, $code_field, $measurement,
-                    $bucket, $extraParams);
-	} else if ($datasource == "gtr") {
+                    $bucket, $datasource, $extraParams);
+	} else if ($datasource == "gtr-norm") {
 
             $queries = $this->buildGTRBlendFluxQueries($entities, $step,
                     $datasource_id, $field, $code_field, $measurement,

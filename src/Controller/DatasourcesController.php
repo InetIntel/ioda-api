@@ -165,7 +165,7 @@ class DatasourcesController extends ApiController
      *     </li>
      * </ul>
      *
-     * <h3>Google Transparency Report (gtr)</h3>
+     * <h3>Google Transparency Report (gtr and gtr-norm)</h3>
      * <ul>
      *     <li>
      *          Data published by the Google Transparency Report team that provide a normalised indication of the amount of traffic observed for each of Google's public services (e.g. search, maps, drive, translate etc.) for a particular country.
@@ -231,7 +231,7 @@ class DatasourcesController extends ApiController
      *     name="datasource",
      *     in="path",
      *     type="string",
-     *     description="Shortname of the data source: bgp, ucsd-nt, merit-nt, gtr, ping-slash24",
+     *     description="Shortname of the data source: bgp, ucsd-nt, merit-nt, gtr, gtr-norm, ping-slash24",
      *     default=null
      * )
      * @SWG\Response(

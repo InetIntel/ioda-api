@@ -217,6 +217,7 @@ class SignalsService
 		"ucsd-nt" => "aliasByNode(darknet.ucsd-nt.non-erratic.$fqid_combined.uniq_src_ip, $aliasIndexNt[$entityType])",
 		"merit-nt" => "aliasByNode(darknet.merit-nt.non-erratic.$fqid_combined.uniq_src_ip, $aliasIndexNt[$entityType])",
 		"gtr" => "aliasByNode(google_tr.$fqid_combined.traffic, $aliasIndex[$entityType])",
+		"gtr-norm" => "aliasByNode(google_tr.$fqid_combined.traffic, $aliasIndex[$entityType])",
                 // NOTE: if see strange gaps in between bins, consider bring back keepLastValue function for ping-slash24
                 "ping-slash24" => "aliasByNode(groupByNode(active.ping-slash24.$fqid_combined.probers.team-1.caida-sdsc.*.up_slash24_cnt,$aliasIndex[$entityType], 'sumSeries'), $aliasIndex[$entityType])",
             ];

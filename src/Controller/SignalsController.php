@@ -197,7 +197,7 @@ class SignalsController extends ApiController
      *     in="query",
      *     type="string",
      *     description="Filter signals by datasource",
-     *     enum={"bgp", "ucsd-nt", "ping-slash24", "merit-nt", "gtr"},
+     *     enum={"bgp", "ucsd-nt", "ping-slash24", "merit-nt", "gtr", "gtr-norm"},
      *     required=false,
      *     default=null
      * )
