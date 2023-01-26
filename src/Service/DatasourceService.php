@@ -179,6 +179,8 @@ class DatasourceService
             $ds = "ucsd-nt";
         } elseif (strpos($fqid,"merit-nt")!==false){
             $ds = "merit-nt";
+        } elseif (strpos($fqid,"gtr")!==false){
+            $ds = "gtr";
         } elseif (strpos($fqid,"ping-slash24")!==false){
             $ds = "ping-slash24";
         }
