@@ -65,6 +65,8 @@ class OutagesAlertsRepository extends ServiceEntityRepository
         $qb = $this->createQueryBuilder('a');
         $qb->orderBy('a.time', 'ASC');
 
+        /* temporary -- skip S-ARIMA alerts for now */
+        $qb->andWhere('a.method != \'sarima\'');
 
         if ($from) {
             $qb->andWhere('a.time >= :from')->setParameter('from', $from);
