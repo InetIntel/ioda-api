@@ -55,10 +55,17 @@ class TimeSeriesNormalizer implements ContextAwareNormalizerInterface
         $data = [];
         $entity = $this->normalizer->normalize($timeSeries->getMetadataEntity(), $format, $context);
 
+        $fqid = $timeSeries->getFQID();
+        $parts = explode(".", $fqid);
+        if ($parts[0] === "geo") {
+            $parts[1] = "provider";
+            $fqid = implode(".", $parts);
+        }
+
         $data["entityType"] = $entity["type"]["type"];
         $data["entityCode"] = $entity["code"];
         $data["entityName"] = $entity["name"];
-        $data["entityFqid"] = $timeSeries->getFQID();
+        $data["entityFqid"] = $fqid;
         $data["datasource"] = $timeSeries->getDatasource();
         $data["subtype"] = $timeSeries->getSubtype();
         $data["from"] = $timeSeries->getFrom()->getTimestamp();
