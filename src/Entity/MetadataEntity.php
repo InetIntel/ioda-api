@@ -257,6 +257,11 @@ class MetadataEntity
         }
     }
 
+    public function getFQID(): ?string
+    {
+        return $this->getAttribute("fqid");
+    }
+
     public function setFQID(string $fqid)
     {
         $attr = new MetadataEntityAttribute();

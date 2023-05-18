@@ -107,6 +107,12 @@ class TimeSeries
      */
     protected $metadataEntity;
 
+    /**
+     * @var string
+     * @Groups("public")
+     */
+    protected $fqid;
+
 
     /**
      * Some data sources have multiple metrics (e.g. GTR) -- this field
@@ -125,6 +131,16 @@ class TimeSeries
     public function getDatasource(): string
     {
         return $this->datasource;
+    }
+
+    public function setFQID(string $fqid)
+    {
+        $this->fqid = $fqid;
+    }
+
+    public function getFQID(): string
+    {
+        return $this->fqid;
     }
 
     public function setSubtype(string $subtype)

@@ -192,8 +192,8 @@ class SignalsService
                 $unique[] = end($fields);
             }
 
-	    if(($datasource_id=="ucsd-nt" || $datasource_id=="merit-nt")
-		    && $common=="asn"){
+            if(($datasource_id=="ucsd-nt" || $datasource_id=="merit-nt")
+                    && $common=="asn"){
                 $common="routing.asn";
             }
             $fqid_combined = $common . ".{" . implode(",", $unique) . "}";
@@ -214,10 +214,10 @@ class SignalsService
 
             $queryJsons = [
                 "bgp" => "aliasByNode(bgp.prefix-visibility.$fqid_combined.v4.visibility_threshold.min_50%_ff_peer_asns.visible_slash24_cnt, $aliasIndex[$entityType])",
-		"ucsd-nt" => "aliasByNode(darknet.ucsd-nt.non-erratic.$fqid_combined.uniq_src_ip, $aliasIndexNt[$entityType])",
-		"merit-nt" => "aliasByNode(darknet.merit-nt.non-erratic.$fqid_combined.uniq_src_ip, $aliasIndexNt[$entityType])",
-		"gtr" => "aliasByNode(google_tr.$fqid_combined.traffic, $aliasIndex[$entityType])",
-		"gtr-norm" => "aliasByNode(google_tr.$fqid_combined.traffic, $aliasIndex[$entityType])",
+                "ucsd-nt" => "aliasByNode(darknet.ucsd-nt.non-erratic.$fqid_combined.uniq_src_ip, $aliasIndexNt[$entityType])",
+                "merit-nt" => "aliasByNode(darknet.merit-nt.non-erratic.$fqid_combined.uniq_src_ip, $aliasIndexNt[$entityType])",
+                "gtr" => "aliasByNode(google_tr.$fqid_combined.traffic, $aliasIndex[$entityType])",
+                "gtr-norm" => "aliasByNode(google_tr.$fqid_combined.traffic, $aliasIndex[$entityType])",
                 // NOTE: if see strange gaps in between bins, consider bring back keepLastValue function for ping-slash24
                 "ping-slash24" => "aliasByNode(groupByNode(active.ping-slash24.$fqid_combined.probers.team-1.caida-sdsc.*.up_slash24_cnt,$aliasIndex[$entityType], 'sumSeries'), $aliasIndex[$entityType])",
             ];
@@ -325,7 +325,7 @@ class SignalsService
 
             // post-processing
             foreach(array_keys($arr) as $code){
-		$ts = $arr[$code];
+                $ts = $arr[$code];
                 list($entityCode, $subType) = array_pad(explode("|->", $code), 2, '');
                 $ts -> setMetadataEntity($entityMap[$entityCode]);
                 $ts -> setNativeStep($datasource->getNativeStep());
@@ -333,8 +333,9 @@ class SignalsService
                     // not enough to calculate a true step, use native step instead
                     $ts->setStep($ts-> getNativeStep());
                 }
-		$ts -> setDatasource($datasource->getDatasource());
-		$ts -> setSubtype($subType);
+                $ts -> setFQID($entityMap[$entityCode]->getFQID());
+                $ts -> setDatasource($datasource->getDatasource());
+                $ts -> setSubtype($subType);
                 if(!array_key_exists($entityCode, $ts_array)){
                     $ts_array[$entityCode] = [];
                 }
@@ -347,8 +348,8 @@ class SignalsService
             $ts_set = new TimeSeriesSet();
             $ts_set->setMetadataEntity($entity);
 
-	    $code = $entity->getCode();
-	    if(array_key_exists($code, $ts_array)){
+            $code = $entity->getCode();
+            if(array_key_exists($code, $ts_array)){
                 foreach($ts_array[$code] as $ts){
                     $ts_set->addOneSeries($ts);
                 }
