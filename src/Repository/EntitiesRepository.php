@@ -71,8 +71,9 @@ class EntitiesRepository extends ServiceEntityRepository
             [
                 'm.code != :unknown',
                 (!empty($type) ? 'mt.type ILIKE :type' : null),
-                (!empty($code) ? 'm.code IN (:codes)' : null),
-                (!empty($name) ? 'm.name ILIKE :wildcard_name' : null),
+                (!($code === null || $code === '') ? 'm.code IN (:codes)':null),
+                (!($name === null || $name === '') ?
+                            'm.name ILIKE :wildcard_name' : null),
                 (!empty($relatedType) ? 'omt.type ILIKE :relatedType' : null),
                 (!empty($relatedCode) ? 'om.code ILIKE :relatedCode' : null),
             ]
