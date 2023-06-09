@@ -199,7 +199,7 @@ class OutagesBackend
             $ts = $this->convertEventsToTimeseries($from, $until, $maxPoints, $events);
             $ts->setMetadataEntity($entity);
             $ts->setDatasource($datasource);
-
+            $ts->setFQID($entity->getFQID());
             $tses[] = $ts;
         }
 
