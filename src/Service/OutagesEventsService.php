@@ -157,7 +157,11 @@ class OutagesEventsService
         foreach($alerts as $alert){
             /* TEMPORARY -- ignore alerts detected via S-ARIMA for now... */
             if ($alert->getMethod() == "sarima") {
-                continue;
+                if ($alert->getDatasource() == "gtr") {
+                   // allow GTR sarima events
+                } else {
+                    continue;
+                }
             }
             $entity_id = $alert->getMetaType() . $alert->getMetaCode();
             if(!array_key_exists($entity_id, $res)){

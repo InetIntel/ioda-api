@@ -85,7 +85,22 @@ class OutagesAlertsService
 
         foreach ($alerts as &$alert) {
             $alertId = $alert->getFqid() . $alert->getMetaType() . $alert->getMetaCode();
+            $alert->setDatasource($this->datasourceService->fqidToDatasourceName($alert->getFqid()));
+
             $level = $alert->getLevel();
+
+            $source = $alert->getDatasource();
+            $method = $alert->getMethod();
+
+            /* Hack to filter out SARIMA events that are not quite ready
+             * for publication yet...
+             */
+            if ($method === "sarima") {
+                if ($source !== "gtr") {
+                    continue;
+                }
+            }
+
             if (!array_key_exists($alertId, $currentLevel)) {
                 $currentLevel[$alertId] = $level;
                 $squashed[] = $alert;
@@ -146,10 +161,6 @@ class OutagesAlertsService
         if ($limit) {
             // paginate
             $alerts = array_slice($alerts, $limit*$page, $limit);
-        }
-
-        foreach($alerts as $alert){
-            $alert->setDatasource($this->datasourceService->fqidToDatasourceName($alert->getFqid()));
         }
 
         return $alerts;
