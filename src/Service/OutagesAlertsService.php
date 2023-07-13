@@ -65,6 +65,35 @@ class OutagesAlertsService
         $this->datasourceService = $datasourceService;
     }
 
+    private function filterIgnoredAlerts(array &$alerts, ?string $ignoreMethods): array
+    {
+        $res = [];
+
+	if ($ignoreMethods != null) {
+            $methods = explode(",", $ignoreMethods);
+	} else {
+	    return $alerts;
+	}
+
+	foreach($alerts as $al) {
+	    $al->setDatasource($this->datasourceService->fqidToDatasourceName($al->getFqid()));
+
+	    $lookup = $al->getDatasource() . "." . $al->getMethod();
+            if (in_array($lookup, $methods)) {
+                continue;
+	    }
+
+            if (in_array($al->getDatasource() . ".*", $methods)) {
+                continue;
+            }
+            if (in_array("*." . $al->getMethod(), $methods)) {
+                continue;
+            }
+            array_push($res, $al);
+        }
+        return $res;
+    }
+
     /**
      * @param OutagesAlert[] $alerts
      *
@@ -85,7 +114,10 @@ class OutagesAlertsService
 
         foreach ($alerts as &$alert) {
             $alertId = $alert->getFqid() . $alert->getMetaType() . $alert->getMetaCode();
+	    $alert->setDatasource($this->datasourceService->fqidToDatasourceName($alert->getFqid()));
+
             $level = $alert->getLevel();
+
             if (!array_key_exists($alertId, $currentLevel)) {
                 $currentLevel[$alertId] = $level;
                 $squashed[] = $alert;
@@ -114,10 +146,12 @@ class OutagesAlertsService
      * @param int $page
      * @param null $relatedType
      * @param null $relatedCode
+     * @param null $ignoreMethods
+     * @param null $ignoreSources
      * @return OutagesAlert[]
      */
     public function findAlerts($from, $until, $entityType, $entityCode, $datasource, $limit=null, $page=0,
-                               $relatedType=null, $relatedCode=null)
+                               $relatedType=null, $relatedCode=null, $ignoreMethods=null)
     {
         // find alerts, already sorted by time
 
@@ -131,7 +165,8 @@ class OutagesAlertsService
             }
             $code_chunks = array_chunk($codes, 1000, true);
             foreach($code_chunks as $code_chunk) {
-                $alerts = array_merge($alerts, $this->repo->findAlerts($from, $until, $entityType, implode(",", $code_chunk), $datasource, null, null));
+		$alerts = array_merge($alerts, $this->repo->findAlerts($from, $until, $entityType, implode(",", $code_chunk), $datasource, null, null));
+                $alerts = $this->filterIgnoredAlerts($alerts, $ignoreMethods);
                 $alerts = $this->squashAlerts($alerts);
                 if($limit && count($alerts)>$limit){
                     break;
@@ -139,6 +174,7 @@ class OutagesAlertsService
             }
         } else {
             $alerts = $this->repo->findAlerts($from, $until, $entityType, $entityCode, $datasource, $relatedType, $relatedCode);
+            $alerts = $this->filterIgnoredAlerts($alerts, $ignoreMethods);
             // squash alerts
             $alerts = $this->squashAlerts($alerts);
         }
@@ -146,10 +182,6 @@ class OutagesAlertsService
         if ($limit) {
             // paginate
             $alerts = array_slice($alerts, $limit*$page, $limit);
-        }
-
-        foreach($alerts as $alert){
-            $alert->setDatasource($this->datasourceService->fqidToDatasourceName($alert->getFqid()));
         }
 
         return $alerts;

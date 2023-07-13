@@ -60,8 +60,10 @@ class OutagesEventNormalizer implements ContextAwareNormalizerInterface
             $res["location"] = sprintf("%s/%s", $data["entity"]["type"], $data["entity"]["code"]);
             $res["start"] = $event->getFrom();
             $res["duration"] = $event->getUntil() - $event->getFrom();
-            $res["uncertainty"] = null;
-            $res["status"] = 0;
+	    $res["uncertainty"] = null;
+	    $res["method"] = $event->getMethod();
+	    $res["datasource"] = $event->getDatasource();
+	    $res["status"] = 0;
             $res["fraction"] = null;
             $res["score"] = $event->getScore();
             $res["location_name"] = $data["entity"]['name'];

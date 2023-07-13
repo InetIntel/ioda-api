@@ -61,11 +61,21 @@ class OutagesEvent
         $this->format = $format;
         $this->includeAlerts = $includeAlerts;
         $this->overlap = $overlap;
-        if($mergedEvent){
-            $this->datasource = "overall";
-        } else {
-            $this->datasource = $alerts[0]->getDatasource();
-        }
+	$this->datasource = "unknown";
+	$this->method = "unknown";
+	foreach ($alerts as $al) {
+	    if ($this->method === "unknown") {
+		$this->method = $al->getMethod();
+	    } else if ($this->method !== $al->getMethod()) {
+		$this->method = "multiple";
+	    }
+
+	    if ($this->datasource === "unknown") {
+		$this->datasource = $al->getDatasource();
+	    } else if ($this->datasource !== $al->getDatasource()) {
+		$this->datasource = "overall";
+	    }
+	}
     }
 
     /////////////////////
@@ -80,6 +90,24 @@ class OutagesEvent
     public function isIncludeAlerts(): bool
     {
         return $this->includeAlerts;
+    }
+
+    /**
+     * @return string
+     */
+    public function getMethod(): string
+    {
+        return $this->method;
+    }
+
+    /**
+     * @param string $method
+     * @return OutagesEvent
+     */
+    public function setMethod(string $method): OutagesEvent
+    {
+        $this->method = $method;
+        return $this;
     }
 
     /**
@@ -265,6 +293,12 @@ class OutagesEvent
      * @var string
      */
     private $datasource;
+
+    /**
+     * @Groups({"public"})
+     * @var string
+     */
+    private $method;
 
     /**
      * @var string
