@@ -60,9 +60,14 @@ class OutagesAlertNormalizer implements ContextAwareNormalizerInterface
         $res["time"] = $data["time"];
         $res["level"] = $data["level"];
         $res["condition"] = $data["condition"];
-        $res["value"] = $data["value"];
-        $res["historyValue"] = $data["historyValue"];
-
+        if ($data["datasource"] === "gtr") {
+            $res["value"] = (int)($data["value"] / 1000000);
+            $res["historyValue"] = (int)($data["historyValue"] / 1000000);
+        } else {
+            $res["value"] = $data["value"];
+            $res["historyValue"] = $data["historyValue"];
+        }
+        $res["method"] = $data["method"];
         return $res;
     }
 

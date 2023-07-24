@@ -155,10 +155,6 @@ class OutagesEventsService
     {
         $res = [];
         foreach($alerts as $alert){
-            /* TEMPORARY -- ignore alerts detected via S-ARIMA for now... */
-            if ($alert->getMethod() == "sarima") {
-                continue;
-            }
             $entity_id = $alert->getMetaType() . $alert->getMetaCode();
             if(!array_key_exists($entity_id, $res)){
                 $res[$entity_id] = array();
@@ -271,7 +267,8 @@ class OutagesEventsService
         $res = [];
         foreach (array_keys($events) as $aId) {
             foreach ($events[$aId] as &$e) {
-                $ds = $this->datasourceService->fqidToDatasourceName($e['fqid']);
+		$ds = $this->datasourceService->fqidToDatasourceName($e['fqid']);
+                $ds = $ds . "." . $e['method']; 
                 if (!array_key_exists($ds, $res)) {
                     $res[$ds] = 0;
                 }
@@ -358,7 +355,7 @@ class OutagesEventsService
         // sort alerts by time
         // usort($alerts, ["App\Outages\OutagesEventsService","cmpAlert"]);
 
-        # EVENT: "location" "start" "duration" "uncertainty" "status" "fraction" "score" "location_name" "overlaps_window"
+        # EVENT: "location" "start" "duration" "uncertainty" "status" "fraction" "score" "location_name" "overlaps_window" "method"
 
         $events = []; // events[fqid] -> [complete events]
         $curEvents = []; // curEvents[fqid] -> ongoing event
@@ -370,6 +367,8 @@ class OutagesEventsService
             $drop = (abs($a->getHistoryValue() -
                         $a->getValue()) /
                     max($a->getHistoryValue(), $a->getValue())) * 100;
+	    $method = $a->getMethod();
+	    $source = $a->getDatasource();
 
             // are we tracking any events for this ID?
             if (!array_key_exists($aId, $events)) {
@@ -388,7 +387,9 @@ class OutagesEventsService
                 $cE['score'] += $cE['prevDrop'] * $interAlertMins;
                 $cE['prevTime'] = $time;
                 $cE['prevDrop'] = $drop;
-                $cE['alerts'][] = $a;
+		$cE['alerts'][] = $a;
+		$cE['method'] = $method;
+		$cE['datasource'] = $source;
 
                 if ($level === "normal") {
                     $cE['until'] = $time;
@@ -407,7 +408,9 @@ class OutagesEventsService
                         'metaType' => $a->getMetaType(),
                         'metaCode' => $a->getMetaCode(),
                         'from' => $time,
-                        'alerts' => [$a],
+			'alerts' => [$a],
+			'method' => $method,
+			'datasource' => $source,
                         'X-Overlaps-Window' => false,
                         // until will be set at end
                         'score' => 0,
