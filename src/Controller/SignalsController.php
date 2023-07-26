@@ -336,6 +336,7 @@ class SignalsController extends ApiController
             $defaultAsn->setName(sprintf("AS%d", $entityCode));
             $defaultAsn->setId(1001);
             $defaultAsn->setType($defaultAsnMetatype);
+            $defaultAsn->setFqid("asn." . $entityCode);
 
             array_push($metas, $defaultAsn);
         }
