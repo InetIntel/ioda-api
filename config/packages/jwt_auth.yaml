@@ -1,4 +1,0 @@
-jwt_auth:
-  domain: "%env(AUTH0_DOMAIN)%"
-  authorized_issuer: "https://%env(AUTH0_DOMAIN)%/"
-  api_identifier: "%env(AUTH0_IDENTIFIER)%/%env(CH_API_VERSION)%"
