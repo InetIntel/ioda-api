@@ -434,7 +434,8 @@ END;
 
     private function buildStandardFluxQueries(array $entities, int $step,
 	    int $datasource_id, string $field, string $code_field,
-    	    string $measurement, string $bucket, string $extra, string $aggr)
+    	    string $measurement, string $bucket, string $extra, string $aggr,
+            string $geo_db)
     {
 
         $fluxQueries = [];
@@ -446,6 +447,7 @@ from(bucket: "$bucket")
   |> filter(fn: (r) =>
     r._measurement == "$measurement" and
     r._field == "$field" and
+    r.geo_db == "$geo_db" and
     r.$code_field == "$entityCode"
     $extra
   )
@@ -513,6 +515,7 @@ END;
         $aggr = self::FIELD_MAP[$datasource]["$entityType"]["aggr"];
 
         $datasource_id = self::FIELD_MAP[$datasource]["datasource_id"];
+        $geo_db = "netacuity";
 
 	if ($datasource == "gtr" or ($datasource == "gtr-norm"
 		&& $extraParams != null)) {
@@ -528,7 +531,7 @@ END;
 	} else {
 	    $queries = $this->buildStandardFluxQueries($entities, $step,
 		    $datasource_id, $field, $code_field, $measurement,
-	            $bucket, $extra, $aggr);
+	            $bucket, $extra, $aggr, $geo_db);
 	}
 
         $combined_queries = implode(",", $queries);
