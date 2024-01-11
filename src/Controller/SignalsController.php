@@ -72,6 +72,7 @@
 
 namespace App\Controller;
 
+use OpenApi\Annotations as SWG;
 use App\Service\MetadataEntitiesService;
 use App\Service\DatasourceService;
 use App\Entity\MetadataEntity;
@@ -85,7 +86,6 @@ use App\Utils\QueryTime;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use InvalidArgumentException;
 use Nelmio\ApiDocBundle\Annotation\Model;
-use Swagger\Annotations as SWG;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;

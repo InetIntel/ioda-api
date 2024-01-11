@@ -110,7 +110,7 @@ class User implements UserInterface, EquatableInterface
         // $this->plainPassword = null;
     }
 
-    public function isEqualTo(UserInterface $user)
+    public function isEqualTo(UserInterface $user): bool
     {
         if (!$user instanceof User) {
             return false;
@@ -119,5 +119,10 @@ class User implements UserInterface, EquatableInterface
             return false;
         }
         return true;
+    }
+
+    public function getUserIdentifier(): string
+    {
+	    return $this->getSubject();
     }
 }
