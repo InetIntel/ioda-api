@@ -60,4 +60,3 @@ services:
     #     arguments:
     #         $nameConverter: '@serializer.name_converter.camel_case_to_snake_case'
 
-    Auth0\JWTAuthBundle\Security\Auth0Service: '@jwt_auth.auth0_service'

@@ -60,7 +60,7 @@ class TimeSeriesSetNormalizer implements ContextAwareNormalizerInterface
         return $normalized;
     }
 
-    public function supportsNormalization($data, $format = null, array $context = [])
+    public function supportsNormalization($data, $format = null, array $context = []) : bool
     {
         return $data instanceof TimeSeriesSet;
     }

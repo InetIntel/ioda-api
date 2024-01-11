@@ -72,7 +72,7 @@
 
 namespace App\Controller;
 
-use Swagger\Annotations as SWG;
+use OpenApi\Annotations as SWG;
 use App\Service\OutagesAlertsService;
 use App\Service\DatasourceService;
 use App\Service\OutagesEventsService;
