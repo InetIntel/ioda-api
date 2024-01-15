@@ -6,7 +6,6 @@
         "ext-curl": "^7.2",
         "ext-iconv": "*",
         "ext-json": "^1.6",
-        "auth0/jwt-auth-bundle": "^3.1",
         "doctrine/doctrine-bundle": "^1.10",
         "doctrine/doctrine-migrations-bundle": "^2.0",
         "doctrine/orm": "^2.6",
