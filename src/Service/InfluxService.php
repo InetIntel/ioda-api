@@ -88,32 +88,34 @@ use App\Utils\QueryTime;
 class InfluxService
 {
     const BGP_EXTRA_CLAUSE = " and r.ip_version == \"v4\" and r.visibility_threshold == \"min_50%_ff_peer_asns\"";
+    const BGP_EXTRA_CLAUSE_GEO = " and r.ip_version == \"v4\" and r.visibility_threshold == \"min_50%_ff_peer_asns\" and r.geo_db == \"netacuity\" ";
     const NT_EXTRA_GEO = " and r.geo_db == \"netacuity\" ";
+    const AP_EXTRA_GEO = " and r.geo_db == \"netacuity\" ";
 
     const FIELD_MAP = [
         "bgp" => [
             "continent" => [
                 "measurement" => "geo_continent_visibility",
                 "code_field" => "continent_code",
-                "extra" => self::BGP_EXTRA_CLAUSE,
+                "extra" => self::BGP_EXTRA_CLAUSE_GEO,
                 "aggr" => "",
             ],
             "country" => [
                 "measurement" => "geo_country_visibility",
                 "code_field" => "country_code",
-                "extra" => self::BGP_EXTRA_CLAUSE,
+                "extra" => self::BGP_EXTRA_CLAUSE_GEO,
                 "aggr" => "",
             ],
             "county" => [
                 "measurement" => "geo_county_visibility",
                 "code_field" => "county_code",
-                "extra" => self::BGP_EXTRA_CLAUSE,
+                "extra" => self::BGP_EXTRA_CLAUSE_GEO,
                 "aggr" => "",
             ],
             "region" => [
                 "measurement" => "geo_region_visibility",
                 "code_field" => "region_code",
-                "extra" => self::BGP_EXTRA_CLAUSE,
+                "extra" => self::BGP_EXTRA_CLAUSE_GEO,
                 "aggr" => "",
             ],
             "asn" => [
@@ -130,25 +132,25 @@ class InfluxService
             "continent" => [
                 "measurement" => "geo_continent_slash24",
                 "code_field" => "continent_code",
-                "extra" => "",
+                "extra" => AP_EXTRA_GEO,
                 "aggr" => "",
             ],
             "country" => [
                 "measurement" => "geo_country_slash24",
                 "code_field" => "country_code",
-                "extra" => "",
+                "extra" => AP_EXTRA_GEO,
                 "aggr" => "",
             ],
             "county" => [
                 "measurement" => "geo_county_slash24",
                 "code_field" => "county_code",
-                "extra" => "",
+                "extra" => AP_EXTRA_GEO,
                 "aggr" => "",
             ],
             "region" => [
                 "measurement" => "geo_region_slash24",
                 "code_field" => "region_code",
-                "extra" => "",
+                "extra" => AP_EXTRA_GEO,
                 "aggr" => "",
             ],
             "asn" => [
@@ -434,8 +436,7 @@ END;
 
     private function buildStandardFluxQueries(array $entities, int $step,
 	    int $datasource_id, string $field, string $code_field,
-    	    string $measurement, string $bucket, string $extra, string $aggr,
-            string $geo_db)
+    	    string $measurement, string $bucket, string $extra, string $aggr)
     {
 
         $fluxQueries = [];
@@ -447,7 +448,6 @@ from(bucket: "$bucket")
   |> filter(fn: (r) =>
     r._measurement == "$measurement" and
     r._field == "$field" and
-    r.geo_db == "$geo_db" and
     r.$code_field == "$entityCode"
     $extra
   )
@@ -515,7 +515,6 @@ END;
         $aggr = self::FIELD_MAP[$datasource]["$entityType"]["aggr"];
 
         $datasource_id = self::FIELD_MAP[$datasource]["datasource_id"];
-        $geo_db = "netacuity";
 
 	if ($datasource == "gtr" or ($datasource == "gtr-norm"
 		&& $extraParams != null)) {
@@ -531,7 +530,7 @@ END;
 	} else {
 	    $queries = $this->buildStandardFluxQueries($entities, $step,
 		    $datasource_id, $field, $code_field, $measurement,
-	            $bucket, $extra, $aggr, $geo_db);
+	            $bucket, $extra, $aggr);
 	}
 
         $combined_queries = implode(",", $queries);
