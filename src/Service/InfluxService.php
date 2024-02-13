@@ -485,7 +485,7 @@ END;
      * @param string $entityCode
      * @return array|string|string[]
      */
-    public function buildFluxQuery(string $datasource, array $entities, QueryTime $from, QueryTime $until, int $step, ?string $extraParams)
+    public function buildFluxQuery(string $datasource, array $entities, QueryTime $from, QueryTime $until, int $step, int era, ?string $extraParams)
     {
         $from_ts = $from->getEpochTime()*1000;
         $until_ts = $until->getEpochTime()*1000;
