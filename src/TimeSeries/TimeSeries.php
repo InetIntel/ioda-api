@@ -299,6 +299,17 @@ class TimeSeries
         $this->values[] = $value;
     }
 
+    /**
+     * Extend an existing timeseries with additional values
+     *
+     * @param int[] $values -- the values to add to the existing array
+     *
+     */
+    public function appendValues(array $values): void
+    {
+        $this->values = array_merge($this->values, $values);
+    }
+
     public function getNumPoints(): int
     {
         return count($this->values);
