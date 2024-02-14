@@ -12,7 +12,7 @@
         "doctrine/orm": "^2.17",
         "nelmio/api-doc-bundle": "^4.16",
         "nelmio/cors-bundle": "^2.4",
-        "symfony/asset": "*",
+        "symfony/asset": "6.4.*",
         "symfony/console": "^6.4",
         "symfony/dotenv": "*",
         "symfony/flex": "^2.4",
