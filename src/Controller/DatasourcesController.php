@@ -230,9 +230,7 @@ class DatasourcesController extends ApiController
      * @SWG\Parameter(
      *     name="datasource",
      *     in="path",
-     *     type="string",
      *     description="Shortname of the data source: bgp, ucsd-nt, merit-nt, gtr, gtr-norm, ping-slash24",
-     *     default=null
      * )
      * @SWG\Response(
      *     response=200,

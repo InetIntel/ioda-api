@@ -66,10 +66,12 @@ class SymUrlController extends ApiController
      * @SWG\Parameter(
      *     name="noStats",
      *     in="query",
-     *     type="boolean",
      *     description="Do not update usage stats (counter, last-used time, etc.)",
      *     required=false,
-     *     default=false,
+     *     schema=@SWG\Schema(
+     *         type="string",
+     *         enum={ "true", "false" }
+     *     )
      * )
      * @SWG\Response(
      *     response=200,
@@ -138,7 +140,6 @@ class SymUrlController extends ApiController
      * @SWG\Parameter(
      *     name="query",
      *     in="body",
-     *     type="object",
      *     description="Object describing the URL to be shortened",
      *     required=true,
      *     @SWG\Schema(

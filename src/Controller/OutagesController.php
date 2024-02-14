@@ -297,67 +297,62 @@ class OutagesController extends ApiController
      * @SWG\Parameter(
      *     name="entityType",
      *     in="query",
-     *     type="string",
      *     description="Type of the entity, e.g. country, region, asn",
-     *     enum={"continent", "country", "region", "county", "asn"},
+     *     schema=@SWG\Schema(
+     *         type="string",
+     *         enum={"continent", "country", "region", "county", "asn"}
+     *     ),
      *     required=false,
-     *     default=null
      * )
      * @SWG\Parameter(
      *     name="entityCode",
      *     in="query",
-     *     type="string",
      *     description="Code of the entity, e.g. for United States the code is 'US'; use comma ',' to separate multiple codes",
      *     required=false,
-     *     default=null
      * )
      * @SWG\Parameter(
      *     name="from",
      *     in="query",
-     *     type="string",
      *     description="Unix timestamp from when the alerts should begin after",
      *     required=true
      * )
      * @SWG\Parameter(
      *     name="until",
      *     in="query",
-     *     type="string",
      *     description="Unix timestamp until when the alerts should end before",
      *     required=true
      * )
      * @SWG\Parameter(
      *     name="datasource",
      *     in="query",
-     *     type="string",
      *     description="Filter alerts by datasource",
-     *     enum={"bgp", "ucsd-nt", "ping-slash24"},
+     *     schema=@SWG\Schema(
+     *         type="string",
+     *         enum={"bgp", "ping-slash24", "gtr", "merit-nt"}
+     *     ),
      *     required=false
      * )
      * @SWG\Parameter(
      *     name="limit",
      *     in="query",
-     *     type="integer",
      *     description="Maximum number of alerts this query returns",
      *     required=false
      * )
      * @SWG\Parameter(
      *     name="page",
      *     in="query",
-     *     type="integer",
      *     description="Page number of the alerts",
      *     required=false
      * )
      * @SWG\Parameter(
      *     name="relatedTo",
      *     in="query",
-     *     type="string",
      *     description="Find data related to another entity. Format: entityType[/entityCode]",
      *     required=false,
      * )
      * @SWG\Parameter(
      *     name="ignoreMethods",
      *     in="query",
-     *     type="string",
      *     description="Ignore alerts detected for particular datasources or detection methods. Format: <datasource>.<method> -- multiple ignore terms can be specified using commas for separation. * as a wildcard for is also supported for either datasource or method (examples: bgp.median,gtr.*,*.sarima).",
      *     required=false,
      * )
@@ -530,92 +525,88 @@ class OutagesController extends ApiController
      * @SWG\Parameter(
      *     name="entityType",
      *     in="query",
-     *     type="string",
      *     description="Type of the entity, e.g. country, region, asn",
-     *     enum={"continent", "country", "region", "county", "asn"},
-     *     required=false,
-     *     default=null
+     *     schema=@SWG\Schema(
+     *         type="string",
+     *         enum={"continent", "country", "region", "county", "asn"}
+     *     ),
+     *     required=false
      * )
      * @SWG\Parameter(
      *     name="entityCode",
      *     in="query",
-     *     type="string",
      *     description="Code of the entity, e.g. for United States the code is 'US'; use comma ',' to separate multiple codes",
      *     required=false,
-     *     default=null
      * )
      * @SWG\Parameter(
      *     name="from",
      *     in="query",
-     *     type="string",
      *     description="Unix timestamp from when the alerts should begin after",
      *     required=true
      * )
      * @SWG\Parameter(
      *     name="until",
      *     in="query",
-     *     type="string",
      *     description="Unix timestamp until when the alerts should end before",
      *     required=true
      * )
      * @SWG\Parameter(
      *     name="includeAlerts",
      *     in="query",
-     *     type="boolean",
+     *     schema=@SWG\Schema(
+     *         type="string",
+     *         enum={"true", "false"}
+     *     ),
      *     description="Whether to include alerts in the returned events",
-     *     default=false,
      *     required=false
      * )
      * @SWG\Parameter(
      *     name="format",
      *     in="path",
-     *     type="string",
      *     description="Returned event object format",
-     *     enum={"codf", "ioda"},
+     *     schema=@SWG\Schema(
+     *         type="string",
+     *         enum={"codf", "ioda"}
+     *     ),
      *     required=false,
-     *     default="codf"
      * )
      * @SWG\Parameter(
      *     name="limit",
      *     in="query",
-     *     type="integer",
      *     description="Maximum number of events this query returns",
      *     required=false,
-     *     default=2000,
      * )
      * @SWG\Parameter(
      *     name="page",
      *     in="query",
-     *     type="integer",
      *     description="Page number of the events",
      *     required=false
      * )
      * @SWG\Parameter(
      *     name="relatedTo",
      *     in="query",
-     *     type="string",
      *     description="Find data related to another entity. Format: entityType[/entityCode]",
      *     required=false,
      * )
      * @SWG\Parameter(
      *     name="orderBy",
      *     in="query",
-     *     type="string",
      *     description="Ordering summary by field. Format: attr[/[asc|desc]]",
      *     required=false,
      * )
      * @SWG\Parameter(
      *     name="overall",
      *     in="query",
-     *     type="boolean",
+     *     schema=@SWG\Schema(
+     *         type="string",
+     *         enum={"true", "false"}
+     *     ),
      *     description="Merge events across different data sources",
-     *     default=false,
      *     required=false
      * )
      * @SWG\Parameter(
      *     name="ignoreMethods",
      *     in="query",
-     *     type="string",
      *     description="Ignore alerts detected for particular datasources or detection methods. Format: <datasource>.<method> -- multiple ignore terms can be specified using commas for separation. * as a wildcard for is also supported for either datasource or method (examples: bgp.median,gtr.*,*.sarima).",
      *     required=false,
      * )
@@ -781,67 +772,58 @@ class OutagesController extends ApiController
      * @SWG\Parameter(
      *     name="entityType",
      *     in="query",
-     *     type="string",
      *     description="Type of the entity, e.g. country, region, asn",
-     *     enum={"continent", "country", "region", "county", "asn"},
+     *     schema=@SWG\Schema(
+     *         type="string",
+     *         enum={"continent", "country", "region", "county", "asn"}
+     *     ),
      *     required=false,
-     *     default=null
      * )
      * @SWG\Parameter(
      *     name="entityCode",
      *     in="query",
-     *     type="string",
      *     description="Code of the entity, e.g. for United States the code is 'US'; use comma ',' to separate multiple codes",
      *     required=false,
-     *     default=null
      * )
      * @SWG\Parameter(
      *     name="from",
      *     in="query",
-     *     type="string",
      *     description="Unix timestamp from when the alerts should begin after",
      *     required=true
      * )
      * @SWG\Parameter(
      *     name="until",
      *     in="query",
-     *     type="string",
      *     description="Unix timestamp until when the alerts should end before",
      *     required=true
      * )
      * @SWG\Parameter(
      *     name="limit",
      *     in="query",
-     *     type="integer",
      *     description="Maximum number of entity summaries this query returns",
      *     required=false,
-     *     default=2000
      * )
      * @SWG\Parameter(
      *     name="page",
      *     in="query",
-     *     type="integer",
      *     description="Page number of the summaries",
      *     required=false
      * )
      * @SWG\Parameter(
      *     name="relatedTo",
      *     in="query",
-     *     type="string",
      *     description="Find data related to another entity. Format: entityType[/entityCode]",
      *     required=false,
      * )
      * @SWG\Parameter(
      *     name="orderBy",
      *     in="query",
-     *     type="string",
      *     description="Ordering summary by field. Format: attr[/[asc|desc]]",
      *     required=false,
      * )
      * @SWG\Parameter(
      *     name="ignoreMethods",
      *     in="query",
-     *     type="string",
      *     description="Ignore alerts detected for particular datasources or detection methods. Format: <datasource>.<method> -- multiple ignore terms can be specified using commas for separation. * as a wildcard for is also supported for either datasource or method (examples: bgp.median,gtr.*,*.sarima).",
      *     required=false,
      * )

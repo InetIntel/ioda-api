@@ -64,9 +64,7 @@ class TopoController extends ApiController
      * @SWG\Parameter(
      *     name="entityType",
      *     in="path",
-     *     type="string",
      *     description="Type of the entity: continent, country, region, county",
-     *     default=null
      * )
      * @SWG\Response(
      *     response=200,

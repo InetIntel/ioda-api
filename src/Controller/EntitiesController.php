@@ -123,44 +123,36 @@ class EntitiesController extends ApiController
      * @SWG\Parameter(
      *     name="entityType",
      *     in="query",
-     *     type="string",
      *     description="Type of the entity, e.g. country, region, asn",
-     *     default=null,
      *     required=false
      * )
      * @SWG\Parameter(
      *     name="entityCode",
      *     in="query",
-     *     type="string",
      *     description="Code of the entity, e.g. for United States the code is 'US'; use comma ',' to separate multiple codes",
      *     required=false,
-     *     default=null
      * )
      * @SWG\Parameter(
      *     name="relatedTo",
      *     in="query",
-     *     type="string",
      *     description="Find entities related to another entity. Format: entityType[/entityCode]",
      *     required=false,
      * )
      * @SWG\Parameter(
      *     name="search",
      *     in="query",
-     *     type="string",
      *     description="Search entities with name that matches the search term",
      *     required=false,
      * )
      * @SWG\Parameter(
      *     name="limit",
      *     in="query",
-     *     type="integer",
      *     description="maximum number of entities to return",
      *     required=false,
      * )
      * @SWG\Parameter(
      *     name="page",
      *     in="query",
-     *     type="integer",
      *     description="specify the page number of the returned entities",
      *     required=false,
      * )
