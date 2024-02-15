@@ -82,7 +82,7 @@ use Symfony\Component\Serializer\Annotation\Groups;
 
 class Envelope
 {
-    const COPYRIGHT = "This data is Copyright (c) 2021 Georgia Tech Research Corporation. All Rights Reserved.";
+    const COPYRIGHT = "This data is Copyright (c) 2021-2024 Georgia Tech Research Corporation. All Rights Reserved.";
 
     /**
      * @Groups({"all", "public"})
