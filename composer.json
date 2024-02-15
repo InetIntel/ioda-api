@@ -26,8 +26,10 @@
         "zircote/swagger-php": "^4.8"
     },
     "require-dev": {
+        "symfony/debug-bundle": "6.4.*",
         "symfony/maker-bundle": "^1.52",
         "symfony/stopwatch": "6.4.*",
+        "symfony/var-dumper": "6.4.*",
         "symfony/web-profiler-bundle": "6.4.*"
     },
     "config": {
