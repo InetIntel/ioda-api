@@ -137,23 +137,22 @@ class SymUrlController extends ApiController
      *
      * @Route("/", methods={"POST"}, name="new")
      * @SWG\Tag(name="URL Shortener")
-     * @SWG\Parameter(
-     *     name="query",
-     *     in="body",
-     *     description="Object describing the URL to be shortened",
-     *     required=true,
-     *     @SWG\Schema(
-     *         @SWG\Property(
+     * @SWG\RequestBody(
+     *     @SWG\MediaType(
+     *         mediaType="application/json",
+     *         @SWG\Schema(
+     *             @SWG\Property(
      *                     property="longUrl",
      *                     type="string",
      *                     example="https://hicube.caida.org",
      *                     description="Long URL to be shortened"
-     *         ),
-     *         @SWG\Property(
+     *             ),
+     *             @SWG\Property(
      *                     property="shortTag",
      *                     type="string",
      *                     example="myurl",
      *                     description="Short tag to use instead of auto-generated tag [optional]"
+     *             )
      *         )
      *     )
      * )
