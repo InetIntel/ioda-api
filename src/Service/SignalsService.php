@@ -88,12 +88,15 @@ class SignalsService
     private $influxV2Backend;
     /**
      * @var OutagesBackend
-     */
+     /
     private $outagesBackend;
 
     private $graphiteBackend;
 
     private $influxService;
+
+    private $influxSecret;
+    private $influxURI;
 
     /**
      * All available down-sample steps an datasource can use.
@@ -275,12 +278,18 @@ class SignalsService
     public function __construct(OutagesBackend $outagesBackend,
                                 GraphiteBackend $graphiteBackend,
                                 InfluxV2Backend $influxV2Backend,
-                                InfluxService $influxService
+				InfluxService $influxService,
+				#[Autowire(param: 'influx_secret')]
+				string $influxSecret,
+				#[Autowire(param: 'influx_uri')]
+				string $influxURI
     ) {
         $this->outagesBackend = $outagesBackend;
         $this->influxV2Backend = $influxV2Backend;
         $this->influxService = $influxService;
-        $this->graphiteBackend= $graphiteBackend;
+	$this->graphiteBackend= $graphiteBackend;
+	$this->influxSecret = $influxSecret;
+	$this->influxURI = $influxURI;
     }
 
     /**
@@ -384,6 +393,7 @@ class SignalsService
     public function queryForInfluxV2(string $datasource, array $entities, QueryTime $from, QueryTime $until, int $step, ?string $extraParam): array
     {
         $query = $this->influxService->buildFluxQuery($datasource, $entities, $from, $until, $step, $extraParam);
-        return $this -> influxV2Backend -> queryInfluxV2($query);
+	return $this -> influxV2Backend -> queryInfluxV2($query,
+		$this->influxSecret, $this->influxURI);
     }
 }
