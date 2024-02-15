@@ -307,7 +307,7 @@ class TimeSeries
      */
     public function appendValues(array $values): void
     {
-        $this->values = $this->values + $values;
+        $this->values = array_merge($this->values, $values);
     }
 
     public function getNumPoints(): int

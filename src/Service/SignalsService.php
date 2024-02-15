@@ -401,40 +401,40 @@ class SignalsService
     public function queryForInfluxV2(string $datasource, array $entities, QueryTime $from, QueryTime $until, int $step, ?string $extraParam): array
     {
         $era = 0;
-        $f = $from;
+        $f = $from->getEpochTime();
         $complete = 0;
         $finalres = [];
 
-        if (! isset($this->DATA_ERAS[$datasource]) ) {
+	if (! isset($this::DATA_ERAS[$datasource]) ) {
             return [];
         }
-	foreach ($bound in $this->DATA_ERAS[$datasource]) {
+	foreach ($this::DATA_ERAS[$datasource] as $bound) {
             if ($bound == -1 || $complete == 1) {
                 break;
             }
-            $u = $until;
-
+            $u = $until->getEpochTime();
             if ($f >= $bound) {
                 continue;
             }
             if ($u >= $bound) {
                 $u = $bound;
             }
-            $query = $this->influxService->buildFluxQuery($datasource, $entities, $f, $u, $step, $era, $extraParam);
-            $this -> influxV2Backend -> queryInfluxV2($query, $finalres);
+	    $query = $this->influxService->buildFluxQuery($datasource, $entities, new QueryTime($f), new QueryTime($u), $step, $era, $extraParam);
+	    $finalres = $this -> influxV2Backend -> queryInfluxV2($query,
+		    $this->influxSecret, $this->influxURI, $finalres, $step);
 
             $f = $bound;
             $era += 1;
 
-            if ($until <= $bound) {
+            if ($until->getEpochTime() <= $bound) {
                 $complete = 1;
             }
         }
 
         if ( ! $complete) {
-            $query = $this->influxService->buildFluxQuery($datasource, $entities, $f, $until, $step, $era, $extraParam);
-	    $this -> influxV2Backend -> queryInfluxV2($query,
-		    $this->influxSecret, $this->influxURI, $finalres);
+		$query = $this->influxService->buildFluxQuery($datasource, $entities, new QueryTime($f), $until, $step, $era, $extraParam);
+	    $finalres = $this -> influxV2Backend -> queryInfluxV2($query,
+		    $this->influxSecret, $this->influxURI, $finalres, $step);
         }
         return $finalres;
     }

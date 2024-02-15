@@ -88,34 +88,35 @@ use App\Utils\QueryTime;
 class InfluxService
 {
     const BGP_EXTRA_CLAUSE = " and r.ip_version == \"v4\" and r.visibility_threshold == \"min_50%_ff_peer_asns\"";
-    const BGP_EXTRA_CLAUSE_GEO = " and r.ip_version == \"v4\" and r.visibility_threshold == \"min_50%_ff_peer_asns\" and r.geo_db == \"netacuity\" ";
-    const NT_EXTRA_GEO = " and r.geo_db == \"netacuity\" ";
-    const AP_EXTRA_GEO = " and r.geo_db == \"netacuity\" ";
+    const BGP_EXTRA_CLAUSE_GEO_0 = self::BGP_EXTRA_CLAUSE . "and r.geo_db == \"netacuity\" ";
+    const BGP_EXTRA_CLAUSE_GEO_1 = self::BGP_EXTRA_CLAUSE . "and r.geo_db == \"ipinfo\" ";
+    const BASIC_EXTRA_GEO_0 = " and r.geo_db == \"netacuity\" ";
+    const BASIC_EXTRA_GEO_1 = " and r.geo_db == \"ipinfo\" ";
 
     const FIELD_MAP = [
-        "bgp" => [
+        "bgp-0" => [
             "continent" => [
                 "measurement" => "geo_continent_visibility",
                 "code_field" => "continent_code",
-                "extra" => self::BGP_EXTRA_CLAUSE_GEO,
+                "extra" => self::BGP_EXTRA_CLAUSE_GEO_0,
                 "aggr" => "",
             ],
             "country" => [
                 "measurement" => "geo_country_visibility",
                 "code_field" => "country_code",
-                "extra" => self::BGP_EXTRA_CLAUSE_GEO,
+                "extra" => self::BGP_EXTRA_CLAUSE_GEO_0,
                 "aggr" => "",
             ],
             "county" => [
                 "measurement" => "geo_county_visibility",
                 "code_field" => "county_code",
-                "extra" => self::BGP_EXTRA_CLAUSE_GEO,
+                "extra" => self::BGP_EXTRA_CLAUSE_GEO_0,
                 "aggr" => "",
             ],
             "region" => [
                 "measurement" => "geo_region_visibility",
                 "code_field" => "region_code",
-                "extra" => self::BGP_EXTRA_CLAUSE_GEO,
+                "extra" => self::BGP_EXTRA_CLAUSE_GEO_0,
                 "aggr" => "",
             ],
             "asn" => [
@@ -128,29 +129,58 @@ class InfluxService
             "field" => "visible_slash24_cnt",
             "bucket" => "ioda_bgp",
         ],
-        "ping-slash24" => [
+        "bgp-1" => [
+            "continent" => [
+                "measurement" => "geo_continent_visibility",
+                "code_field" => "continent_code",
+                "extra" => self::BGP_EXTRA_CLAUSE_GEO_1,
+                "aggr" => "",
+            ],
+            "country" => [
+                "measurement" => "geo_country_visibility",
+                "code_field" => "country_code",
+                "extra" => self::BGP_EXTRA_CLAUSE_GEO_1,
+                "aggr" => "",
+            ],
+            "region" => [
+                "measurement" => "geo_region_visibility",
+                "code_field" => "region_code",
+                "extra" => self::BGP_EXTRA_CLAUSE_GEO_1,
+                "aggr" => "",
+            ],
+            "asn" => [
+                "measurement" => "asn_visibility",
+                "code_field" => "asn",
+                "extra" => self::BGP_EXTRA_CLAUSE,
+                "aggr" => "",
+            ],
+            "datasource_id" => 5,
+            "field" => "visible_slash24_cnt",
+            "bucket" => "ioda_bgp",
+        ],
+        "ping-slash24-0" => [
             "continent" => [
                 "measurement" => "geo_continent_slash24",
                 "code_field" => "continent_code",
-                "extra" => self::AP_EXTRA_GEO,
+                "extra" => self::BASIC_EXTRA_GEO_0,
                 "aggr" => "",
             ],
             "country" => [
                 "measurement" => "geo_country_slash24",
                 "code_field" => "country_code",
-                "extra" => self::AP_EXTRA_GEO,
+                "extra" => self::BASIC_EXTRA_GEO_0,
                 "aggr" => "",
             ],
             "county" => [
                 "measurement" => "geo_county_slash24",
                 "code_field" => "county_code",
-                "extra" => self::AP_EXTRA_GEO,
+                "extra" => self::BASIC_EXTRA_GEO_0,
                 "aggr" => "",
             ],
             "region" => [
                 "measurement" => "geo_region_slash24",
                 "code_field" => "region_code",
-                "extra" => self::AP_EXTRA_GEO,
+                "extra" => self::BASIC_EXTRA_GEO_0,
                 "aggr" => "",
             ],
             "asn" => [
@@ -163,29 +193,58 @@ class InfluxService
             "field" => "up_slash24_cnt",
             "bucket" => "ioda_trinocular_summed",
         ],
-        "ucsd-nt" => [
+        "ping-slash24-1" => [
+            "continent" => [
+                "measurement" => "geo_continent_slash24",
+                "code_field" => "continent_code",
+                "extra" => self::BASIC_EXTRA_GEO_1,
+                "aggr" => "",
+            ],
+            "country" => [
+                "measurement" => "geo_country_slash24",
+                "code_field" => "country_code",
+                "extra" => self::BASIC_EXTRA_GEO_1,
+                "aggr" => "",
+            ],
+            "region" => [
+                "measurement" => "geo_region_slash24",
+                "code_field" => "region_code",
+                "extra" => self::BASIC_EXTRA_GEO_1,
+                "aggr" => "",
+            ],
+            "asn" => [
+                "measurement" => "asn_slash24",
+                "code_field" => "asn",
+                "extra" => "",
+                "aggr" => "",
+            ],
+            "datasource_id" => 3,
+            "field" => "up_slash24_cnt",
+            "bucket" => "ioda_trinocular_summed_v2",
+        ],
+        "ucsd-nt-0" => [
             "continent" => [
                 "measurement" => "geo_continent",
                 "code_field" => "continent_code",
-                "extra" => self::NT_EXTRA_GEO,
+                "extra" => self::BASIC_EXTRA_GEO_0,
                 "aggr" => "",
             ],
             "country" => [
                 "measurement" => "geo_country",
                 "code_field" => "country_code",
-                "extra" => self::NT_EXTRA_GEO,
+                "extra" => self::BASIC_EXTRA_GEO_0,
                 "aggr" => "",
             ],
             "county" => [
                 "measurement" => "geo_county",
                 "code_field" => "county_code",
-                "extra" => self::NT_EXTRA_GEO,
+                "extra" => self::BASIC_EXTRA_GEO_0,
                 "aggr" => "",
             ],
             "region" => [
                 "measurement" => "geo_region",
                 "code_field" => "region_code",
-                "extra" => self::NT_EXTRA_GEO,
+                "extra" => self::BASIC_EXTRA_GEO_0,
                 "aggr" => "",
             ],
             "asn" => [
@@ -198,29 +257,29 @@ class InfluxService
             "field" => "uniq_src_ip",
             "bucket" => "ioda_ucsd_nt_non_erratic",
         ],
-        "merit-nt" => [
+        "merit-nt-0" => [
             "continent" => [
                 "measurement" => "geo_continent",
                 "code_field" => "continent_code",
-                "extra" => "",
+                "extra" => self::BASIC_EXTRA_GEO_0,
                 "aggr" => "",
             ],
             "country" => [
                 "measurement" => "geo_country",
                 "code_field" => "country_code",
-                "extra" => "",
+                "extra" => self::BASIC_EXTRA_GEO_0,
                 "aggr" => "",
             ],
             "county" => [
                 "measurement" => "geo_county",
                 "code_field" => "county_code",
-                "extra" => "",
+                "extra" => self::BASIC_EXTRA_GEO_0,
                 "aggr" => "",
             ],
             "region" => [
                 "measurement" => "geo_region",
                 "code_field" => "region_code",
-                "extra" => "",
+                "extra" => self::BASIC_EXTRA_GEO_0,
                 "aggr" => "",
             ],
             "asn" => [
@@ -233,7 +292,7 @@ class InfluxService
             "field" => "uniq_src_ip",
             "bucket" => "ioda_merit_nt_non_erratic",
         ],
-        "gtr" => [
+        "gtr-0" => [
             "country" => [
                 "measurement" => "google_tr",
                 "code_field" => "country_code",
@@ -244,7 +303,7 @@ class InfluxService
             "field" => "traffic",
             "bucket" => "ioda_gtr",
         ],
-        "gtr-norm" => [
+        "gtr-norm-0" => [
             "country" => [
                 "measurement" => "google_tr",
                 "code_field" => "country_code",
@@ -485,7 +544,7 @@ END;
      * @param string $entityCode
      * @return array|string|string[]
      */
-    public function buildFluxQuery(string $datasource, array $entities, QueryTime $from, QueryTime $until, int $step, int era, ?string $extraParams)
+    public function buildFluxQuery(string $datasource, array $entities, QueryTime $from, QueryTime $until, int $step, int $era, ?string $extraParams)
     {
         $from_ts = $from->getEpochTime()*1000;
         $until_ts = $until->getEpochTime()*1000;
@@ -502,19 +561,24 @@ END;
             return $query;
         }
 
-        $entityType = $entities[0]->getType()->getType();
-        if (! array_key_exists($entityType, self::FIELD_MAP[$datasource]) ) {
+	$entityType = $entities[0]->getType()->getType();
+	$query_key = $datasource . "-" . $era;
+	if (! array_key_exists($query_key, self::FIELD_MAP) ) {
+	    return $query;
+	}
+
+        if (! array_key_exists($entityType, self::FIELD_MAP[$query_key]) ) {
             return $query;
         }
 
-        $field = self::FIELD_MAP[$datasource]["field"];
-        $code_field =  self::FIELD_MAP[$datasource]["$entityType"]["code_field"];
-        $measurement = self::FIELD_MAP[$datasource]["$entityType"]["measurement"];
-        $bucket = self::FIELD_MAP[$datasource]["bucket"];
-        $extra = self::FIELD_MAP[$datasource]["$entityType"]["extra"];
-        $aggr = self::FIELD_MAP[$datasource]["$entityType"]["aggr"];
+        $field = self::FIELD_MAP[$query_key]["field"];
+        $code_field =  self::FIELD_MAP[$query_key]["$entityType"]["code_field"];
+        $measurement = self::FIELD_MAP[$query_key]["$entityType"]["measurement"];
+        $bucket = self::FIELD_MAP[$query_key]["bucket"];
+        $extra = self::FIELD_MAP[$query_key]["$entityType"]["extra"];
+        $aggr = self::FIELD_MAP[$query_key]["$entityType"]["aggr"];
 
-        $datasource_id = self::FIELD_MAP[$datasource]["datasource_id"];
+        $datasource_id = self::FIELD_MAP[$query_key]["datasource_id"];
 
 	if ($datasource == "gtr" or ($datasource == "gtr-norm"
 		&& $extraParams != null)) {

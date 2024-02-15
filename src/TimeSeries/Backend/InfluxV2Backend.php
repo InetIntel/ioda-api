@@ -115,18 +115,19 @@ class InfluxV2Backend
         return json_decode($output, true);
     }
 
-    private function parseReturnValue($responseJson, $finalresult) {
+    private function parseReturnValue($responseJson, $finalresult,
+	    $queriedStep) {
         if (!array_key_exists("results", $responseJson)) {
 	    return $finalresult;
 	}
-        foreach($responseJson["results"] as $entityCode => $res) {
+	foreach($responseJson["results"] as $entityCode => $res) {
             $raw_values = $res["frames"][0]["data"]["values"];
             if(count($raw_values)!=2){
                 continue;
             }
             // find step
             if(count($raw_values[0])<=1){
-                $step = 0;
+                $step = $queriedStep;
             } else {
                 $step = ($raw_values[0][1] -$raw_values[0][0])/1000;
             }
@@ -143,13 +144,12 @@ class InfluxV2Backend
                 $newSeries->setUntil($until);
                 $newSeries->setStep($step);
                 $newSeries->setValues($raw_values[1]);
-                $finalresult[$entityCode] = $newSeries;
+		$finalresult[$entityCode] = $newSeries;
             } else {
                 $series = $finalresult[$entityCode];
                 // we should only ever be appending time periods that
                 // immediately follow the existing series
-
-                if ($series->getUntil() != $from) {
+		if ($series->getUntil() == $from) {
                     if ($series->getUntil() < $until) {
                         $series->setUntil($until);
                         $series->appendValues($raw_values[1]);
@@ -159,7 +159,7 @@ class InfluxV2Backend
                             $series->setStep($step);
                         }
                     }
-                }
+		}
             }
         }
 
@@ -174,11 +174,10 @@ class InfluxV2Backend
      * @throws BackendException
      */
     public function queryInfluxV2(string $query, string $secret,
-		string $influxuri, array $finalres): void
+		string $influxuri, array $finalres, int $step): array
     {
         // send query and process response
-        $res = $this->sendQuery($query, $secret, $influxuri);
-
-        $this->parseReturnValue($res, $finalres);
+	    $res = $this->sendQuery($query, $secret, $influxuri);
+	return $this->parseReturnValue($res, $finalres, $step);
     }
 }
