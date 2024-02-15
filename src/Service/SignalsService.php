@@ -109,6 +109,14 @@ class SignalsService
         31536000, 63072000, 315360000, //year-level [1, 2, 10]
     ];
 
+    const DATA_ERAS = [
+	    "bgp" => [ 1707523200 ],
+	    "ping-slash24" => [ 1709078400 ],
+	    "merit-nt" => [ 1711843200 ],
+	    "ucsd-nt" => [ -1 ],
+	    "gtr" => [ -1 ],
+	    "gtr-norm" => [ -1 ],
+    ];
 
     /**
      * Build graphite expression JSON object based on given $datasource.
@@ -392,8 +400,42 @@ class SignalsService
      */
     public function queryForInfluxV2(string $datasource, array $entities, QueryTime $from, QueryTime $until, int $step, ?string $extraParam): array
     {
-        $query = $this->influxService->buildFluxQuery($datasource, $entities, $from, $until, $step, $extraParam);
-	return $this -> influxV2Backend -> queryInfluxV2($query,
-		$this->influxSecret, $this->influxURI);
+        $era = 0;
+        $f = $from;
+        $complete = 0;
+        $finalres = [];
+
+        if (! isset($this->DATA_ERAS[$datasource]) ) {
+            return [];
+        }
+	foreach ($bound in $this->DATA_ERAS[$datasource]) {
+            if ($bound == -1 || $complete == 1) {
+                break;
+            }
+            $u = $until;
+
+            if ($f >= $bound) {
+                continue;
+            }
+            if ($u >= $bound) {
+                $u = $bound;
+            }
+            $query = $this->influxService->buildFluxQuery($datasource, $entities, $f, $u, $step, $era, $extraParam);
+            $this -> influxV2Backend -> queryInfluxV2($query, $finalres);
+
+            $f = $bound;
+            $era += 1;
+
+            if ($until <= $bound) {
+                $complete = 1;
+            }
+        }
+
+        if ( ! $complete) {
+            $query = $this->influxService->buildFluxQuery($datasource, $entities, $f, $until, $step, $era, $extraParam);
+	    $this -> influxV2Backend -> queryInfluxV2($query,
+		    $this->influxSecret, $this->influxURI, $finalres);
+        }
+        return $finalres;
     }
 }
