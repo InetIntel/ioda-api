@@ -116,7 +116,7 @@ class InfluxV2Backend
     }
 
     private function parseReturnValue($responseJson, $finalresult,
-	    $queriedStep) {
+       	    $queriedStep) {
         if (!array_key_exists("results", $responseJson)) {
 	    return $finalresult;
 	}
@@ -178,6 +178,6 @@ class InfluxV2Backend
     {
         // send query and process response
 	    $res = $this->sendQuery($query, $secret, $influxuri);
-	return $this->parseReturnValue($res, $finalres, $step);
+	    return $this->parseReturnValue($res, $finalres, $step);
     }
 }

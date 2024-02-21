@@ -55,18 +55,21 @@ class DataEraEntity
 {
     /**
      * @ORM\Column(type="integer")
+     * @ORM\Id
      * @var integer
      */
     private $era_id;
 
     /**
      * @ORM\Column(type="string")
+     * @ORM\Id
      * @var string
      */
     private $datasource;
 
     /**
      * @ORM\Column(type="string")
+     * @ORM\Id
      * @var string
      */
     private $entity_type;
@@ -170,7 +173,10 @@ class DataEraEntity
      */
     public function getQueryTerm(): string
     {
-        return $this->query_term;
+        if ($this->query_term) {
+            return str_replace("@", "\"", $this->query_term);
+        }
+        return "";
     }
 
     /**
@@ -260,6 +266,9 @@ class DataEraEntity
      */
     public function getEndTime(): int
     {
+        if (! $this->end_ts || $this->end_ts <= 0) {
+            return time() + 86400;
+        }
         return $this->end_ts;
     }
 

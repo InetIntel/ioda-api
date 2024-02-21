@@ -69,9 +69,10 @@ class DataErasRepository extends ServiceEntityRepository
             WHERE
                 LOWER(era.datasource) = LOWER(:datasource) AND
                 LOWER(era.entity_type) = LOWER(:entitytype) AND
+                era.start_ts != 0 AND
                 (
-                  (era.start_ts >= :from AND era.start_ts < :end) OR
-                  (era.end_ts >= :from AND era.end_ts < :end) OR
+                  (era.start_ts <= :from AND (era.end_ts > :from OR era.end_ts < 0)) OR
+                  (era.start_ts < :end AND (era.end_ts > :end OR era.end_ts < 0)) OR
                   (era.start_ts <= :from AND era.end_ts > :end)
                 ) ORDER BY era.start_ts '
         ;
