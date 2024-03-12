@@ -63,6 +63,10 @@ class DataErasRepository extends ServiceEntityRepository
         $rsm = new ResultSetMappingBuilder($em, ResultSetMappingBuilder::COLUMN_RENAMING_INCREMENT);
         $rsm->addRootEntityFromClassMetadata('App\Entity\DataEraEntity', 'era');
 
+        if ($from <= 0) {
+            return [];
+        }
+
         $sql =
             'SELECT ' . $rsm->generateSelectClause() . '
             FROM ioda_data_eras era
@@ -70,6 +74,7 @@ class DataErasRepository extends ServiceEntityRepository
                 LOWER(era.datasource) = LOWER(:datasource) AND
                 LOWER(era.entity_type) = LOWER(:entitytype) AND
                 era.start_ts != 0 AND
+                era.dev_flag = FALSE AND
                 (
                   (era.start_ts <= :from AND (era.end_ts > :from OR era.end_ts < 0)) OR
                   (era.start_ts < :end AND (era.end_ts > :end OR era.end_ts < 0)) OR
