@@ -72,6 +72,7 @@
 
 namespace App\Controller;
 
+use OpenApi\Annotations as SWG;
 use App\Service\MetadataEntitiesService;
 use App\Service\DatasourceService;
 use App\Entity\MetadataEntity;
@@ -85,7 +86,6 @@ use App\Utils\QueryTime;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use InvalidArgumentException;
 use Nelmio\ApiDocBundle\Annotation\Model;
-use Swagger\Annotations as SWG;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
@@ -164,58 +164,52 @@ class SignalsController extends ApiController
      * @SWG\Parameter(
      *     name="entityType",
      *     in="path",
-     *     type="string",
      *     description="Type of the entity, e.g. country, region, asn",
-     *     enum={"continent", "country", "region", "county", "asn"},
+     *     schema=@SWG\Schema(
+     *     	type="string",
+     *          enum={"continent", "country", "region", "county", "asn"}
+     *     ),
      *     required=false,
-     *     default=null
      * )
      * @SWG\Parameter(
      *     name="entityCode",
      *     in="path",
-     *     type="string",
      *     description="Code of the entity, e.g. for United States the code is 'US'; use comma ',' to separate multiple codes",
      *     required=false,
-     *     default=null
      * )
      * @SWG\Parameter(
      *     name="from",
      *     in="query",
-     *     type="integer",
      *     description="Unix timestamp from when the alerts should begin after",
      *     required=true
      * )
      * @SWG\Parameter(
      *     name="until",
      *     in="query",
-     *     type="integer",
      *     description="Unix timestamp until when the alerts should end before",
      *     required=true
      * )
      * @SWG\Parameter(
      *     name="datasource",
      *     in="query",
-     *     type="string",
      *     description="Filter signals by datasource",
-     *     enum={"bgp", "ucsd-nt", "ping-slash24", "merit-nt", "gtr", "gtr-norm"},
+     *     schema=@SWG\Schema(
+     *     	type="string",
+     *          enum={"bgp", "ping-slash24", "merit-nt", "gtr", "gtr-norm"}
+     *     ),
      *     required=false,
-     *     default=null
      * )
      * @SWG\Parameter(
      *     name="sourceParams",
      *     in="query",
-     *     type="string",
      *     description="Comma-separated list of additional datasource-specific parameters",
      *     required=false,
-     *     default=null
      * )
      * @SWG\Parameter(
      *     name="maxPoints",
      *     in="query",
-     *     type="integer",
      *     description="Maximum number of points per time-series",
      *     required=false,
-     *     default=null
      * )
      * @SWG\Response(
      *     response=200,
@@ -380,41 +374,36 @@ class SignalsController extends ApiController
      * @SWG\Parameter(
      *     name="entityType",
      *     in="path",
-     *     type="string",
      *     description="Type of the entity, e.g. country, region, asn",
-     *     enum={"continent", "country", "region", "county", "asn"},
+     *     schema=@SWG\Schema(
+     *         type="string",
+     *         enum={"continent", "country", "region", "county", "asn"}
+     *     ),
      *     required=false,
-     *     default=null
      * )
      * @SWG\Parameter(
      *     name="entityCode",
      *     in="path",
-     *     type="string",
      *     description="Code of the entity, e.g. for United States the code is 'US'; use comma ',' to separate multiple codes",
      *     required=false,
-     *     default=null
      * )
      * @SWG\Parameter(
      *     name="from",
      *     in="query",
-     *     type="integer",
      *     description="Unix timestamp from when the alerts should begin after",
      *     required=true
      * )
      * @SWG\Parameter(
      *     name="until",
      *     in="query",
-     *     type="integer",
      *     description="Unix timestamp until when the alerts should end before",
      *     required=true
      * )
      * @SWG\Parameter(
      *     name="maxPoints",
      *     in="query",
-     *     type="integer",
      *     description="Maximum number of points per time-series",
      *     required=false,
-     *     default=null
      * )
      * @SWG\Response(
      *     response=200,

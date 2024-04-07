@@ -2,37 +2,44 @@
     "type": "project",
     "license": "proprietary",
     "require": {
-        "php": "^7.2",
-        "ext-curl": "^7.2",
+        "php": "^8.1",
+        "ext-curl": "^8.1",
         "ext-iconv": "*",
-        "ext-json": "^1.6",
-        "doctrine/doctrine-bundle": "^1.10",
-        "doctrine/doctrine-migrations-bundle": "^2.0",
-        "doctrine/orm": "^2.6",
-        "nelmio/api-doc-bundle": "^3.10.0",
-        "nelmio/cors-bundle": "^1.5",
-        "sensio/framework-extra-bundle": "^5.2",
-        "symfony/asset": "*",
-        "symfony/console": "*",
+        "ext-json": "^8.1",
+        "doctrine/annotations": "^2.0",
+        "doctrine/doctrine-bundle": "^2.11",
+        "doctrine/doctrine-migrations-bundle": "^3.0",
+        "doctrine/orm": "^2.17",
+        "nelmio/api-doc-bundle": "^4.16",
+        "nelmio/cors-bundle": "^2.4",
+        "symfony/asset": "6.4.*",
+        "symfony/console": "^6.4",
         "symfony/dotenv": "*",
-        "symfony/flex": "^1.1",
+        "symfony/flex": "^2.4",
         "symfony/framework-bundle": "*",
-        "symfony/proxy-manager-bridge": "4.4.*",
+        "symfony/proxy-manager-bridge": "6.4.*",
+        "symfony/routing": "6.4.*",
         "symfony/security-bundle": "*",
         "symfony/serializer": "*",
         "symfony/twig-bundle": "*",
-        "symfony/yaml": "*"
+        "symfony/yaml": "*",
+        "zircote/swagger-php": "^4.8"
     },
     "require-dev": {
-        "symfony/maker-bundle": "*",
-        "symfony/stopwatch": "4.4.*",
-        "symfony/web-profiler-bundle": "4.4.*"
+        "symfony/debug-bundle": "6.4.*",
+        "symfony/maker-bundle": "^1.52",
+        "symfony/stopwatch": "6.4.*",
+        "symfony/var-dumper": "6.4.*",
+        "symfony/web-profiler-bundle": "6.4.*"
     },
     "config": {
         "preferred-install": {
             "*": "dist"
         },
-        "sort-packages": true
+        "sort-packages": true,
+        "allow-plugins": {
+            "symfony/flex": true
+        }
     },
     "autoload": {
         "psr-4": {
@@ -68,7 +75,7 @@
     "extra": {
         "symfony": {
             "allow-contrib": false,
-            "require": "4.4.*"
+            "require": "6.4.*"
         }
     }
 }

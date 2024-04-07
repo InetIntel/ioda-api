@@ -50,5 +50,14 @@
 <script src="{{ asset('bundles/nelmioapidoc/swagger-ui/swagger-ui-bundle.js') }}"></script>
 <script src="{{ asset('bundles/nelmioapidoc/swagger-ui/swagger-ui-standalone-preset.js') }}"></script>
 <script src="{{ asset('bundles/nelmioapidoc/init-swagger-ui.js') }}"></script>
+
+<script type="text/javascript">
+	(function () {
+                var swaggerUI = {{ swagger_ui_config|json_encode(65)|raw }};
+                window.onload = loadSwaggerUI(swaggerUI);
+        })();
+</script>
+
+
 </body>
 </html>

@@ -41,7 +41,7 @@ use App\Service\SymUrlService;
 use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\ORM\ORMException;
 use Nelmio\ApiDocBundle\Annotation\Model;
-use Swagger\Annotations as SWG;
+use OpenApi\Annotations as SWG;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
@@ -66,10 +66,12 @@ class SymUrlController extends ApiController
      * @SWG\Parameter(
      *     name="noStats",
      *     in="query",
-     *     type="boolean",
      *     description="Do not update usage stats (counter, last-used time, etc.)",
      *     required=false,
-     *     default=false,
+     *     schema=@SWG\Schema(
+     *         type="string",
+     *         enum={ "true", "false" }
+     *     )
      * )
      * @SWG\Response(
      *     response=200,
@@ -135,24 +137,22 @@ class SymUrlController extends ApiController
      *
      * @Route("/", methods={"POST"}, name="new")
      * @SWG\Tag(name="URL Shortener")
-     * @SWG\Parameter(
-     *     name="query",
-     *     in="body",
-     *     type="object",
-     *     description="Object describing the URL to be shortened",
-     *     required=true,
-     *     @SWG\Schema(
-     *         @SWG\Property(
+     * @SWG\RequestBody(
+     *     @SWG\MediaType(
+     *         mediaType="application/json",
+     *         @SWG\Schema(
+     *             @SWG\Property(
      *                     property="longUrl",
      *                     type="string",
      *                     example="https://hicube.caida.org",
      *                     description="Long URL to be shortened"
-     *         ),
-     *         @SWG\Property(
+     *             ),
+     *             @SWG\Property(
      *                     property="shortTag",
      *                     type="string",
      *                     example="myurl",
      *                     description="Short tag to use instead of auto-generated tag [optional]"
+     *             )
      *         )
      *     )
      * )

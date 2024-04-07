@@ -38,7 +38,7 @@ namespace App\Controller;
 use App\Response\Envelope;
 use App\Service\TopoService;
 use Nelmio\ApiDocBundle\Annotation\Model;
-use Swagger\Annotations as SWG;
+use OpenApi\Annotations as SWG;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
@@ -64,9 +64,7 @@ class TopoController extends ApiController
      * @SWG\Parameter(
      *     name="entityType",
      *     in="path",
-     *     type="string",
      *     description="Type of the entity: continent, country, region, county",
-     *     default=null
      * )
      * @SWG\Response(
      *     response=200,

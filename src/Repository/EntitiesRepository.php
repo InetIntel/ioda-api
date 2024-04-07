@@ -38,13 +38,13 @@ namespace App\Repository;
 use App\Entity\MetadataEntity;
 use Doctrine\ORM\Query\ResultSetMappingBuilder;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Symfony\Bridge\Doctrine\RegistryInterface;
+use Doctrine\Persistence\ManagerRegistry;
 
 class EntitiesRepository extends ServiceEntityRepository
 {
     const METADATA_DATA_CACHE_TIMEOUT = 3600;
 
-    public function __construct(RegistryInterface $registry)
+    public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, MetadataEntity::class);
     }

@@ -73,6 +73,7 @@
 namespace App\TimeSeries\Backend;
 
 
+use Symfony\Component\VarDumper\VarDumper;
 use App\TimeSeries\TimeSeries;
 use DateTime;
 
@@ -84,10 +85,8 @@ class InfluxV2Backend
      * @return array
      * @throws BackendException
      */
-    private function sendQuery(string $query): array {
-        // retrive environment variables for inlfuxdb connection
-        $secret = getenv("INFLUXV2DB_SECRET");
-        $influx_uri = getenv("INFLUXV2DB_API");
+	private function sendQuery(string $query, string $secret,
+		string $influx_uri): array {
         if(!$secret){
             throw new BackendException("Missing INFLUXDB_SECRET environment variable");
         }
@@ -112,7 +111,7 @@ class InfluxV2Backend
         // $output contains the output string
         $output = curl_exec($ch);
         // close curl resource to free up system resources
-        curl_close($ch);
+	curl_close($ch);
         return json_decode($output, true);
     }
 
@@ -159,10 +158,11 @@ class InfluxV2Backend
      * @return array
      * @throws BackendException
      */
-    public function queryInfluxV2(string $query): array
+    public function queryInfluxV2(string $query, string $secret,
+    		string $influxuri): array
     {
         // send query and process response
-        $res = $this->sendQuery($query);
+        $res = $this->sendQuery($query, $secret, $influxuri);
 
         return $this->parseReturnValue($res);
     }
