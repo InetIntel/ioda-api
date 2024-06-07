@@ -103,12 +103,14 @@ class TopoController extends ApiController
      * @var Request $request
      * @var SerializerInterface $serializer
      * @var TopoService $topoService
-     * @return JsonResponse
+     * @return BinaryFileResponse
      */
     public function topoLookup(string $entityType, Request $request,
                           SerializerInterface $serializer,
                           TopoService $topoService)
     {
+	    return $topoService->getTopoJson($entityType);
+	    /*
         $env = new Envelope('topo.get',
             'query',
             [],
@@ -127,6 +129,7 @@ class TopoController extends ApiController
             $env->setError($ex->getMessage());
             return $this->json($env, 400);
         }
-        return $this->json($env);
+	return $this->json($env);
+	     */
     }
 }

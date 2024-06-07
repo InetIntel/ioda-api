@@ -35,15 +35,18 @@
 
 namespace App\Service;
 
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
+ini_set('memory_limit', '2048M');
 class TopoService
 {
     const DB_PATH_PFX = '/var/topojson';
 
     const ENTITY_TYPE_TO_DB = [
         "continent" => ["natural-earth", "ne_10m_admin_0.continents.v3.1.0"],
-        "country" => ["natural-earth", "ne_10m_admin_0.countries.v3.1.0"],
-        "region" => ["natural-earth", "ne_10m_admin_1.regions.v3.0.0"],
+        "country" => ["natural-earth", "ne_10m_admin_0.countries.v5.1.1"],
+        "region" => ["natural-earth", "ne_10m_admin_1.regions.v5.1.1"],
         "county" => ["gadm", "gadm.counties.v2.0"],
     ];
 
@@ -54,22 +57,25 @@ class TopoService
         "county" => "id",
     ];
 
-    public function getTopoJson(string $entityType): array
+    public function getTopoJson(string $entityType): BinaryFileResponse
     {
         if (!array_key_exists($entityType, self::ENTITY_TYPE_TO_DB)) {
             throw new \InvalidArgumentException("Invalid entity type '$entityType'");
         }
         // build the file path
-        // TODO move this data to swift?
         $db = self::ENTITY_TYPE_TO_DB[$entityType][0];
         $table = self::ENTITY_TYPE_TO_DB[$entityType][1];
-        $file = implode('/', [TopoService::DB_PATH_PFX, $db, $table]) . '.processed.topo.json';
+        $file = implode('/', [TopoService::DB_PATH_PFX, $db, $table]) . '.enveloped.processed.topo.json.gz';
         if (!file_exists($file)) {
             throw new \InvalidArgumentException("Could not load TopoJson for $db/$table ($file)");
-        }
-        // TODO: if this is too slow, remove envelope and return file contents
-        // TODO: directly to save the json decode/encode step
-        return json_decode(file_get_contents($file), true);
+	}
+
+	$response = new BinaryFileResponse($file);
+	$response->headers->set('Content-Type', 'application/json');
+	$response->headers->set('Content-Encoding', 'gzip');
+	$response->setLastModified(new \DateTime('@' . filemtime($file)));
+
+        return $response;
     }
     public function getIdField(string $entityType): string
     {
