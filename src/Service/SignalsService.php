@@ -95,6 +95,8 @@ class SignalsService
 
     private $influxService;
 
+    private $dataErasService;
+
     private $influxSecret;
     private $influxURI;
 
@@ -109,6 +111,14 @@ class SignalsService
         31536000, 63072000, 315360000, //year-level [1, 2, 10]
     ];
 
+    const DATA_ERAS = [
+	    "bgp" => [ -1 ],
+	    "ping-slash24" => [ -1 ],
+	    "merit-nt" => [ -1 ],
+	    "ucsd-nt" => [ -1 ],
+	    "gtr" => [ -1 ],
+	    "gtr-norm" => [ -1 ],
+    ];
 
     /**
      * Build graphite expression JSON object based on given $datasource.
@@ -279,6 +289,7 @@ class SignalsService
                                 GraphiteBackend $graphiteBackend,
                                 InfluxV2Backend $influxV2Backend,
 				InfluxService $influxService,
+                DataErasService $erasService,
 				#[Autowire(param: 'influx_secret')]
 				string $influxSecret,
 				#[Autowire(param: 'influx_uri')]
@@ -287,6 +298,7 @@ class SignalsService
         $this->outagesBackend = $outagesBackend;
         $this->influxV2Backend = $influxV2Backend;
         $this->influxService = $influxService;
+        $this->dataErasService = $erasService;
 	$this->graphiteBackend= $graphiteBackend;
 	$this->influxSecret = $influxSecret;
 	$this->influxURI = $influxURI;
@@ -392,8 +404,31 @@ class SignalsService
      */
     public function queryForInfluxV2(string $datasource, array $entities, QueryTime $from, QueryTime $until, int $step, ?string $extraParam): array
     {
-        $query = $this->influxService->buildFluxQuery($datasource, $entities, $from, $until, $step, $extraParam);
-	return $this -> influxV2Backend -> queryInfluxV2($query,
-		$this->influxSecret, $this->influxURI);
+        $eras = [];
+        $f = $from->getEpochTime();
+        $u = $until->getEpochTime();
+        $finalres = [];
+        $entityType = $entities[0]->getType()->getType();
+
+        $eras = $this->dataErasService->getEras($datasource, $entityType,
+                $f, $u);
+
+        foreach ($eras as $era) {
+            if ($era->getStartTime() == 0) {
+                continue;
+            }
+            $start = max($f, $era->getStartTime());
+            $fin = min($u, $era->getEndTime());
+
+            $query = $this->influxService->buildFluxQuery($datasource,
+                    $entities, new QueryTime($start), new QueryTime($fin),
+                    $step, $era, $extraParam);
+
+	        $finalres = $this -> influxV2Backend -> queryInfluxV2($query,
+		            $this->influxSecret, $this->influxURI, $finalres, $step);
+
+        }
+
+        return $finalres;
     }
 }

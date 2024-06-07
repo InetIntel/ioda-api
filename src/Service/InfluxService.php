@@ -74,12 +74,13 @@
 namespace App\Service;
 
 use App\Utils\QueryTime;
+use App\Entity\DataEraEntity;
 
 /* NOTE TO FUTURE SELVES
  *
  * datasource_ids are not going to be consistent across grafana deployments.
- * If we ever have to redeploy grafana from scratch, the IDs here will no longer
- * match the data sources in grafana.
+ * If we ever have to redeploy grafana from scratch, the IDs need to be
+ * updated in the ioda_data_eras to match the ones in grafana.
  *
  * So if you have bugs where the API can't seem to run queries any more, then
  * maybe the datasource ID is wrong.
@@ -88,180 +89,89 @@ use App\Utils\QueryTime;
 class InfluxService
 {
     const BGP_EXTRA_CLAUSE = " and r.ip_version == \"v4\" and r.visibility_threshold == \"min_50%_ff_peer_asns\"";
-    const BGP_EXTRA_CLAUSE_GEO = " and r.ip_version == \"v4\" and r.visibility_threshold == \"min_50%_ff_peer_asns\" and r.geo_db == \"netacuity\" ";
-    const NT_EXTRA_GEO = " and r.geo_db == \"netacuity\" ";
-    const AP_EXTRA_GEO = " and r.geo_db == \"netacuity\" ";
+
+    const CODE_FIELDS = [
+        "continent" => "continent_code",
+        "country" => "country_code",
+        "region" => "region_code",
+        "county" => "county_code",
+        "asn" => "asn",
+    ];
 
     const FIELD_MAP = [
         "bgp" => [
             "continent" => [
                 "measurement" => "geo_continent_visibility",
-                "code_field" => "continent_code",
-                "extra" => self::BGP_EXTRA_CLAUSE_GEO,
-                "aggr" => "",
             ],
             "country" => [
                 "measurement" => "geo_country_visibility",
-                "code_field" => "country_code",
-                "extra" => self::BGP_EXTRA_CLAUSE_GEO,
-                "aggr" => "",
             ],
             "county" => [
                 "measurement" => "geo_county_visibility",
-                "code_field" => "county_code",
-                "extra" => self::BGP_EXTRA_CLAUSE_GEO,
-                "aggr" => "",
             ],
             "region" => [
                 "measurement" => "geo_region_visibility",
-                "code_field" => "region_code",
-                "extra" => self::BGP_EXTRA_CLAUSE_GEO,
-                "aggr" => "",
             ],
             "asn" => [
                 "measurement" => "asn_visibility",
-                "code_field" => "asn",
-                "extra" => self::BGP_EXTRA_CLAUSE,
-                "aggr" => "",
             ],
-            "datasource_id" => 5,
-            "field" => "visible_slash24_cnt",
-            "bucket" => "ioda_bgp",
+            "extra" => self::BGP_EXTRA_CLAUSE,
         ],
         "ping-slash24" => [
             "continent" => [
                 "measurement" => "geo_continent_slash24",
-                "code_field" => "continent_code",
-                "extra" => self::AP_EXTRA_GEO,
-                "aggr" => "",
             ],
             "country" => [
                 "measurement" => "geo_country_slash24",
-                "code_field" => "country_code",
-                "extra" => self::AP_EXTRA_GEO,
-                "aggr" => "",
             ],
             "county" => [
                 "measurement" => "geo_county_slash24",
-                "code_field" => "county_code",
-                "extra" => self::AP_EXTRA_GEO,
-                "aggr" => "",
             ],
             "region" => [
                 "measurement" => "geo_region_slash24",
-                "code_field" => "region_code",
-                "extra" => self::AP_EXTRA_GEO,
-                "aggr" => "",
             ],
             "asn" => [
                 "measurement" => "asn_slash24",
-                "code_field" => "asn",
-                "extra" => "",
-                "aggr" => "",
             ],
-            "datasource_id" => 3,
-            "field" => "up_slash24_cnt",
-            "bucket" => "ioda_trinocular_summed",
-        ],
-        "ucsd-nt" => [
-            "continent" => [
-                "measurement" => "geo_continent",
-                "code_field" => "continent_code",
-                "extra" => self::NT_EXTRA_GEO,
-                "aggr" => "",
-            ],
-            "country" => [
-                "measurement" => "geo_country",
-                "code_field" => "country_code",
-                "extra" => self::NT_EXTRA_GEO,
-                "aggr" => "",
-            ],
-            "county" => [
-                "measurement" => "geo_county",
-                "code_field" => "county_code",
-                "extra" => self::NT_EXTRA_GEO,
-                "aggr" => "",
-            ],
-            "region" => [
-                "measurement" => "geo_region",
-                "code_field" => "region_code",
-                "extra" => self::NT_EXTRA_GEO,
-                "aggr" => "",
-            ],
-            "asn" => [
-                "measurement" => "origin_asn",
-                "code_field" => "asn",
-                "extra" => "",
-                "aggr" => "",
-            ],
-            "datasource_id" => 1,
-            "field" => "uniq_src_ip",
-            "bucket" => "ioda_ucsd_nt_non_erratic",
+            "extra" => "",
         ],
         "merit-nt" => [
             "continent" => [
                 "measurement" => "geo_continent",
-                "code_field" => "continent_code",
-                "extra" => "",
-                "aggr" => "",
             ],
             "country" => [
                 "measurement" => "geo_country",
-                "code_field" => "country_code",
-                "extra" => "",
-                "aggr" => "",
             ],
             "county" => [
                 "measurement" => "geo_county",
-                "code_field" => "county_code",
-                "extra" => "",
-                "aggr" => "",
             ],
             "region" => [
                 "measurement" => "geo_region",
-                "code_field" => "region_code",
-                "extra" => "",
-                "aggr" => "",
             ],
             "asn" => [
                 "measurement" => "origin_asn",
-                "code_field" => "asn",
-                "extra" => "",
-                "aggr" => "",
             ],
-            "datasource_id" => 2,
-            "field" => "uniq_src_ip",
-            "bucket" => "ioda_merit_nt_non_erratic",
+            "extra" => "",
         ],
         "gtr" => [
             "country" => [
                 "measurement" => "google_tr",
-                "code_field" => "country_code",
-		"extra" => " and r.product == \"WEB_SEARCH\"",
-		"aggr" => "",
             ],
-            "datasource_id" => 4,
-            "field" => "traffic",
-            "bucket" => "ioda_gtr",
+            "extra" => " and r.product == \"WEB_SEARCH\"",
         ],
         "gtr-norm" => [
             "country" => [
                 "measurement" => "google_tr",
-                "code_field" => "country_code",
-		"extra" => " and r.product == \"WEB_SEARCH\"",
-		"aggr" => "",
             ],
-            "datasource_id" => 4,
-            "field" => "traffic",
-            "bucket" => "ioda_gtr",
+            "extra" => " and r.product == \"WEB_SEARCH\"",
         ]
     ];
 
     private function buildGTRNormalisedFluxSingleQuery(string $entityCode,
-	    int $step, string $field, string $code_field, string $measurement,
-	    string $bucket, string $prod)
+        int $step, string $field, string $code_field, string $measurement,
+        string $bucket, string $prod)
     {
-	$q = <<< END
+    $q = <<< END
 fetched = from(bucket: "$bucket")
   |> range(start: v.timeRangeStart, stop:v.timeRangeStop)
   |> filter(fn: (r) =>
@@ -281,75 +191,75 @@ END;
     }
 
     private function buildGTRBlendFluxSingleQuery(string $entityCode,
-	    int $step, string $field,
-	    string $code_field, string $measurement, string $bucket)
+        int $step, string $field,
+        string $code_field, string $measurement, string $bucket)
     {
 
         $q = <<< END
 allfetched = from(bucket: "ioda_gtr")
-  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)
-  |> filter(fn: (r) =>
-    r._measurement == "$measurement" and
-    r._field == "$field" and
-    r.$code_field == "$entityCode" and
-    (r.product == "WEB_SEARCH" or r.product == "GMAIL" or r.product == "MAPS")
-  )
+|> range(start: v.timeRangeStart, stop:v.timeRangeStop)
+|> filter(fn: (r) =>
+        r._measurement == "$measurement" and
+        r._field == "$field" and
+        r.$code_field == "$entityCode" and
+        (r.product == "WEB_SEARCH" or r.product == "GMAIL" or r.product == "MAPS")
+        )
 
 maxweb = allfetched |> filter(fn: (r) => r.product == "WEB_SEARCH") |> max() |> findColumn(fn: (key) => true, column: "_value")
 maxmail = allfetched |> filter(fn: (r) => r.product == "GMAIL") |> max() |> findColumn(fn: (key) => true, column: "_value")
 maxmaps = allfetched |> filter(fn: (r) => r.product == "MAPS") |> max() |> findColumn(fn: (key) => true, column: "_value")
 
 allfetched
-  |> pivot(rowKey: ["_time"], columnKey: ["product"], valueColumn: "_value")
-  |> map(fn: (r) => ({r with MAPS: r.MAPS / maxmaps[0]}))
-  |> map(fn: (r) => ({r with GMAIL: r.GMAIL / maxmail[0]}))
-  |> map(fn: (r) => ({r with WEB_SEARCH: r.WEB_SEARCH / maxweb[0]}))
-  |> map(fn: (r) => ({r with _value: (r.MAPS + r.GMAIL + r.WEB_SEARCH) / 3.0}))
-  |> drop(columns: ["MAPS", "GMAIL", "WEB_SEARCH"])
+|> pivot(rowKey: ["_time"], columnKey: ["product"], valueColumn: "_value")
+|> map(fn: (r) => ({r with MAPS: r.MAPS / maxmaps[0]}))
+|> map(fn: (r) => ({r with GMAIL: r.GMAIL / maxmail[0]}))
+|> map(fn: (r) => ({r with WEB_SEARCH: r.WEB_SEARCH / maxweb[0]}))
+|> map(fn: (r) => ({r with _value: (r.MAPS + r.GMAIL + r.WEB_SEARCH) / 3.0}))
+|> drop(columns: ["MAPS", "GMAIL", "WEB_SEARCH"])
 END;
 
-	return $q;
+        return $q;
     }
 
     private function buildGTRBlendFluxQueries(array $entities, int $step,
             int $datasource_id, string $field, string $code_field,
-	    string $measurement, string $bucket)
+        string $measurement, string $bucket)
     {
-	$fluxQueries = [];
-        
+        $fluxQueries = [];
+
 
         foreach($entities as $entity){
             $entityCode = $entity->getCode();
-	    $ent_index = $entityCode . "|->BLENDED";
-	    $q = $this->buildGTRBlendFluxSingleQuery($entityCode, $step,
-		    $field, $code_field, $measurement, $bucket);
+            $ent_index = $entityCode . "|->BLENDED";
+            $q = $this->buildGTRBlendFluxSingleQuery($entityCode, $step,
+                    $field, $code_field, $measurement, $bucket);
             $q = str_replace("\n", '', $q);
             $q = str_replace("\t", '    ', $q);
             $q = str_replace("\"", '\\"', $q);
             $fluxQueries[$ent_index] = $q;
-	}
+        }
 
         $queries = [];
         foreach($fluxQueries as $entityCode => $fluxQuery){
             // NOTE: the maxDataPoints needs to be set to a very large value to avoid grafana stripping data off
             //       currently set to be 31536000, which should be equivalent to 10 years
             $queries[] = <<<END
-    {
-      "query": "$fluxQuery",
-      "refId":"$entityCode",
-      "datasourceId": $datasource_id,
-      "intervalMs": 60000,
-      "maxDataPoints": 31536000
-    }
-END;
-	}
-	return $queries;
+            {
+                "query": "$fluxQuery",
+                    "refId":"$entityCode",
+                    "datasourceId": $datasource_id,
+                    "intervalMs": 60000,
+                    "maxDataPoints": 31536000
+            }
+            END;
+        }
+        return $queries;
     }
 
     private function buildGTRRawFluxSingleQuery(string $entityCode,
             int $step, string $field,
-	    string $code_field, string $measurement, string $bucket,
-	    string $prod) {
+        string $code_field, string $measurement, string $bucket,
+        string $prod) {
 
         $q = <<< END
 from(bucket: "$bucket")
@@ -364,82 +274,87 @@ from(bucket: "$bucket")
     createEmpty: true)
   |> yield(name: "mean")
 END;
-	return $q;
+    return $q;
     }
 
     private function buildGTRFluxQueries(array $entities, int $step,
-	    int $datasource_id, string $field, string $code_field,
-	    string $measurement,
-	    string $bucket, string $datasource, ?string $productList)
+        int $datasource_id, string $field, string $code_field,
+        string $measurement,
+        string $bucket, string $datasource, ?string $productList)
     {
 
         $fluxQueries = [];
-	if ($productList == null) {
-	    return [];
-	} else {
-	    $products = explode(",", $productList);
-	}
+        if ($productList == null) {
+            $products = ["WEB_SEARCH"];
+        } else {
+            $products = explode(",", $productList);
+        }
 
         foreach($entities as $entity){
             $entityCode = $entity->getCode();
-	    foreach($products as $prod) {
-		$prod = strtoupper($prod);
-		if ($prod == "SEARCH") {
-		    $prod = "WEB_SEARCH";
-		} else if ($prod == "MAIL") {
-		    $prod = "GMAIL";
-		}
-		$ent_index = $entityCode . "|->" . $prod;
+            foreach($products as $prod) {
+                $prod = strtoupper($prod);
+                if ($prod == "SEARCH") {
+                    $prod = "WEB_SEARCH";
+                } else if ($prod == "MAIL") {
+                    $prod = "GMAIL";
+                }
+                $ent_index = $entityCode . "|->" . $prod;
 
-		if ($prod == "BLENDED") {
-		    if ($datasource == "gtr") {
-		        continue;
-		    }
-		    $q = $this->buildGTRBlendFluxSingleQuery($entityCode,
-		            $step, $field, $code_field, $measurement,
-			    $bucket);
-		} else if ($datasource == "gtr") {
+                if ($prod == "BLENDED") {
+                    if ($datasource == "gtr") {
+                        continue;
+                    }
+                    $q = $this->buildGTRBlendFluxSingleQuery($entityCode,
+                            $step, $field, $code_field, $measurement,
+                            $bucket);
+                } else if ($datasource == "gtr") {
                     $q = $this->buildGTRRawFluxSingleQuery($entityCode,
-		            $step, $field, $code_field, $measurement,
-			    $bucket, $prod);
-		} else if ($datasource == "gtr-norm") {
-		    $q = $this->buildGTRNormalisedFluxSingleQuery($entityCode,
-		            $step, $field, $code_field, $measurement,
-			    $bucket, $prod);
-		} else {
-		    continue;
-		}
+                            $step, $field, $code_field, $measurement,
+                            $bucket, $prod);
+                } else if ($datasource == "gtr-norm") {
+                    $q = $this->buildGTRNormalisedFluxSingleQuery($entityCode,
+                            $step, $field, $code_field, $measurement,
+                            $bucket, $prod);
+                } else {
+                    continue;
+                }
 
                 $q = str_replace("\n", ' ', $q);
                 $q = str_replace("\t", '    ', $q);
                 $q = str_replace("\"", '\\"', $q);
                 $fluxQueries[$ent_index] = $q;
             }
-	}
+        }
 
-	$queries = [];
+        $queries = [];
         foreach($fluxQueries as $entityCode => $fluxQuery){
             // NOTE: the maxDataPoints needs to be set to a very large value to avoid grafana stripping data off
             //       currently set to be 31536000, which should be equivalent to 10 years
             $queries[] = <<<END
-    {
-      "query": "$fluxQuery",
-      "refId":"$entityCode",
-      "datasourceId": $datasource_id,
-      "intervalMs": 60000,
-      "maxDataPoints": 31536000
-    }
-END;
-	}
-	return $queries;
+            {
+                "query": "$fluxQuery",
+                    "refId":"$entityCode",
+                    "datasourceId": $datasource_id,
+                    "intervalMs": 60000,
+                    "maxDataPoints": 31536000
+            }
+            END;
+        }
+        return $queries;
     }
 
     private function buildStandardFluxQueries(array $entities, int $step,
-	    int $datasource_id, string $field, string $code_field,
-    	    string $measurement, string $bucket, string $extra, string $aggr)
+        int $datasource_id, string $field, string $code_field,
+            string $measurement, string $bucket, string $extra, string $qterm)
     {
 
         $fluxQueries = [];
+
+        if ($qterm !== "") {
+            $extra = $extra . " and " . $qterm;
+        }
+
         foreach($entities as $entity){
             $entityCode = $entity->getCode();
             $q = <<< END
@@ -451,7 +366,6 @@ from(bucket: "$bucket")
     r.$code_field == "$entityCode"
     $extra
   )
-  $aggr
   |> aggregateWindow(every: ${step}s, fn: mean, timeSrc: "_start",
     createEmpty: true)
   |> yield(name: "mean")
@@ -474,8 +388,8 @@ END;
       "maxDataPoints": 31536000
     }
 END;
-	}
-	return $queries;
+    }
+    return $queries;
     }
 
     /**
@@ -485,7 +399,7 @@ END;
      * @param string $entityCode
      * @return array|string|string[]
      */
-    public function buildFluxQuery(string $datasource, array $entities, QueryTime $from, QueryTime $until, int $step, ?string $extraParams)
+    public function buildFluxQuery(string $datasource, array $entities, QueryTime $from, QueryTime $until, int $step, DataEraEntity $era, ?string $extraParams)
     {
         $from_ts = $from->getEpochTime()*1000;
         $until_ts = $until->getEpochTime()*1000;
@@ -502,36 +416,32 @@ END;
             return $query;
         }
 
-        $entityType = $entities[0]->getType()->getType();
-        if (! array_key_exists($entityType, self::FIELD_MAP[$datasource]) ) {
-            return $query;
-        }
+        $entityType = $era->getEntityType();
 
-        $field = self::FIELD_MAP[$datasource]["field"];
-        $code_field =  self::FIELD_MAP[$datasource]["$entityType"]["code_field"];
+        $field = $era->getField();
+        $bucket = $era->getBucket();
+        $queryterm = $era->getQueryTerm();
+        $code_field =  self::CODE_FIELDS["$entityType"];
         $measurement = self::FIELD_MAP[$datasource]["$entityType"]["measurement"];
-        $bucket = self::FIELD_MAP[$datasource]["bucket"];
-        $extra = self::FIELD_MAP[$datasource]["$entityType"]["extra"];
-        $aggr = self::FIELD_MAP[$datasource]["$entityType"]["aggr"];
+        $extra = self::FIELD_MAP[$datasource]["extra"];
+        $datasource_id = $era->getGrafanaSource();
 
-        $datasource_id = self::FIELD_MAP[$datasource]["datasource_id"];
-
-	if ($datasource == "gtr" or ($datasource == "gtr-norm"
-		&& $extraParams != null)) {
+        if ($datasource == "gtr" or ($datasource == "gtr-norm"
+                            && $extraParams != null)) {
 
             $queries = $this->buildGTRFluxQueries($entities, $step,
                     $datasource_id, $field, $code_field, $measurement,
                     $bucket, $datasource, $extraParams);
-	} else if ($datasource == "gtr-norm") {
+        } else if ($datasource == "gtr-norm") {
 
             $queries = $this->buildGTRBlendFluxQueries($entities, $step,
                     $datasource_id, $field, $code_field, $measurement,
                     $bucket);
-	} else {
-	    $queries = $this->buildStandardFluxQueries($entities, $step,
-		    $datasource_id, $field, $code_field, $measurement,
-	            $bucket, $extra, $aggr);
-	}
+        } else {
+            $queries = $this->buildStandardFluxQueries($entities, $step,
+                $datasource_id, $field, $code_field, $measurement,
+                $bucket, $extra, $queryterm);
+        }
 
         $combined_queries = implode(",", $queries);
 

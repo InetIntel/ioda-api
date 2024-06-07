@@ -115,21 +115,19 @@ class InfluxV2Backend
         return json_decode($output, true);
     }
 
-    private function parseReturnValue($responseJson) {
-	$res_array = [];
+    private function parseReturnValue($responseJson, $finalresult,
+       	    $queriedStep) {
         if (!array_key_exists("results", $responseJson)) {
-	    return $res_array;
+	    return $finalresult;
 	}
-        foreach($responseJson["results"] as $entityCode => $res) {
+	foreach($responseJson["results"] as $entityCode => $res) {
             $raw_values = $res["frames"][0]["data"]["values"];
             if(count($raw_values)!=2){
                 continue;
             }
-            $res_array[$entityCode] = $raw_values;
-
             // find step
             if(count($raw_values[0])<=1){
-                $step = 0;
+                $step = $queriedStep;
             } else {
                 $step = ($raw_values[0][1] -$raw_values[0][0])/1000;
             }
@@ -140,30 +138,46 @@ class InfluxV2Backend
             $until->setTimestamp(end($raw_values[0])/1000 + $step);
 
             // create new TimeSeries object accordingly
-            $newSeries = new TimeSeries();
-            $newSeries->setFrom($from);
-            $newSeries->setUntil($until);
-            $newSeries->setStep($step);
-            $newSeries->setValues($raw_values[1]);
-            $res_array[$entityCode] = $newSeries;
+            if (!array_key_exists($entityCode, $finalresult)) {
+                $newSeries = new TimeSeries();
+                $newSeries->setFrom($from);
+                $newSeries->setUntil($until);
+                $newSeries->setStep($step);
+                $newSeries->setValues($raw_values[1]);
+		$finalresult[$entityCode] = $newSeries;
+            } else {
+                $series = $finalresult[$entityCode];
+                // we should only ever be appending time periods that
+                // immediately follow the existing series
+		if ($series->getUntil() == $from) {
+                    if ($series->getUntil() < $until) {
+                        $series->setUntil($until);
+                        $series->appendValues($raw_values[1]);
+                    }
+                    if ($series->getStep() == 0 || $series->getStep() > $step) {
+                        if ($step != 0) {
+                            $series->setStep($step);
+                        }
+                    }
+		}
+            }
         }
 
-        return $res_array;
+        return $finalresult;
     }
 
     /**
      * Influx service main entry point.
      *
      * @param string $query
-     * @return array
+     * @param array $finalres -- updated with the result of the query
      * @throws BackendException
      */
     public function queryInfluxV2(string $query, string $secret,
-    		string $influxuri): array
+		string $influxuri, array $finalres, int $step): array
     {
         // send query and process response
-        $res = $this->sendQuery($query, $secret, $influxuri);
-
-        return $this->parseReturnValue($res);
+	    $res = $this->sendQuery($query, $secret, $influxuri);
+	    return $this->parseReturnValue($res, $finalres, $step);
     }
 }

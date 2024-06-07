@@ -10,7 +10,7 @@ doctrine:
         connections:
           ioda_db:
             driver: 'pdo_mysql'
-            server_version: '9.4'
+            server_version: '14.4'
             url: '%env(resolve:DATABASE_ALERTS_URL)%'
     orm:
         auto_generate_proxy_classes: '%kernel.debug%'
