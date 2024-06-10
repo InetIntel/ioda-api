@@ -36,13 +36,9 @@
 namespace App\Service;
 
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
-ini_set('memory_limit', '2048M');
 class TopoService
 {
-    const DB_PATH_PFX = '/var/topojson';
-
     const ENTITY_TYPE_TO_DB = [
         "continent" => ["natural-earth", "ne_10m_admin_0.continents.v3.1.0"],
         "country" => ["natural-earth", "ne_10m_admin_0.countries.v5.1.1"],
@@ -57,7 +53,7 @@ class TopoService
         "county" => "id",
     ];
 
-    public function getTopoJson(string $entityType): BinaryFileResponse
+    public function getTopoJson(string $entityType): Response
     {
         if (!array_key_exists($entityType, self::ENTITY_TYPE_TO_DB)) {
             throw new \InvalidArgumentException("Invalid entity type '$entityType'");
@@ -65,15 +61,13 @@ class TopoService
         // build the file path
         $db = self::ENTITY_TYPE_TO_DB[$entityType][0];
         $table = self::ENTITY_TYPE_TO_DB[$entityType][1];
-        $file = implode('/', [TopoService::DB_PATH_PFX, $db, $table]) . '.enveloped.processed.topo.json.gz';
-        if (!file_exists($file)) {
-            throw new \InvalidArgumentException("Could not load TopoJson for $db/$table ($file)");
-	}
-
-	$response = new BinaryFileResponse($file);
+        $file = $table . '.enveloped.processed.topo.json.gz';
+	$response = new Response();
 	$response->headers->set('Content-Type', 'application/json');
 	$response->headers->set('Content-Encoding', 'gzip');
-	$response->setLastModified(new \DateTime('@' . filemtime($file)));
+	$response->headers->set('X-Accel-Redirect', '/topointernal/' . $file);
+
+	//$response->setLastModified(new \DateTime('@' . filemtime($file)));
 
         return $response;
     }

@@ -103,7 +103,7 @@ class TopoController extends ApiController
      * @var Request $request
      * @var SerializerInterface $serializer
      * @var TopoService $topoService
-     * @return BinaryFileResponse
+     * @return Response
      */
     public function topoLookup(string $entityType, Request $request,
                           SerializerInterface $serializer,
