@@ -67,10 +67,13 @@ class EntitiesRepository extends ServiceEntityRepository
         $rsm = new ResultSetMappingBuilder($em, ResultSetMappingBuilder::COLUMN_RENAMING_INCREMENT);
         $rsm->addRootEntityFromClassMetadata('App\Entity\MetadataEntity', 'm');
 
+        /* exclude counties from search results because we do not collect
+         * county-level data any more
+         */
         $parameters = array_filter(
             [
                 'm.code != :unknown',
-                (!empty($type) ? 'mt.type ILIKE :type' : null),
+                (!empty($type) ? 'mt.type ILIKE :type':'mt.type != \'county\''),
                 (!($code === null || $code === '') ? 'm.code IN (:codes)':null),
                 (!($name === null || $name === '') ?
                             'm.name ILIKE :wildcard_name' : null),
