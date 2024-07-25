@@ -115,13 +115,43 @@ class InfluxV2Backend
         return json_decode($output, true);
     }
 
+    private function mergeFrames($frames, $entityCode) {
+        $tsmap = array();
+
+        if (count($frames) <= 1) {
+            return $frames[0]["data"]["values"];
+        }
+        foreach($frames as $f) {
+            foreach($f["data"]["values"][0] as $ind => $timestamp) {
+                // assumes there is a one-to-one mapping, which there
+                // really should be
+                $val = $f["data"]["values"][1][$ind];
+
+                if (!array_key_exists($timestamp, $tsmap)) {
+                    $tsmap[$timestamp] = $val;
+                } else if ($tsmap[$timestamp] == null) {
+                    $tsmap[$timestamp] = $val;
+                }
+
+            }
+        }
+        ksort($tsmap);
+        $res = [ [], [] ];
+
+        foreach($tsmap as $ts => $val) {
+            array_push($res[0], $ts);
+            array_push($res[1], $val);
+        }
+        return $res;
+    }
+
     private function parseReturnValue($responseJson, $finalresult,
         $queriedStep) {
         if (!array_key_exists("results", $responseJson)) {
             return $finalresult;
         }
         foreach($responseJson["results"] as $entityCode => $res) {
-            $raw_values = $res["frames"][0]["data"]["values"];
+            $raw_values = $this->mergeFrames($res["frames"], $entityCode);
             if(count($raw_values)!=2){
                 continue;
             }
