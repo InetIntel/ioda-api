@@ -49,19 +49,8 @@ class EntitiesRepository extends ServiceEntityRepository
         parent::__construct($registry, MetadataEntity::class);
     }
 
-    /**
-     * Return a sets of entities
-     * @param null $type
-     * @param null $code
-     * @param null $name
-     * @param null $relatedType
-     * @param null $relatedCode
-     * @param null $limit
-     * @param bool $wildcard
-     * @return int|mixed|string
-     */
-    public function findMetadata($type=null, $code=null, $name=null, $limit=null, $page=null, $wildcard=false,
-                                 $relatedType=null, $relatedCode=null)
+    private function findMetadataSimple($type, $code,
+            $name, $limit, $page, $wildcard, $relatedType, $relatedCode)
     {
         $em = $this->getEntityManager();
         $rsm = new ResultSetMappingBuilder($em, ResultSetMappingBuilder::COLUMN_RENAMING_INCREMENT);
@@ -148,5 +137,78 @@ class EntitiesRepository extends ServiceEntityRepository
         }
 
         return $res;
+
+    }
+
+    private function findMetadataComposite($type, $code)
+    {
+        $em = $this->getEntityManager();
+        $rsm = new ResultSetMappingBuilder($em, ResultSetMappingBuilder::COLUMN_RENAMING_INCREMENT);
+        $rsm->addRootEntityFromClassMetadata('App\Entity\MetadataEntity', 'm');
+
+        // split the code into the asn part and the geo part
+        if ($code === null) {
+            return [];
+        }
+        $splitcode = explode('-', $code);
+        if (count($splitcode) == 1) {
+            // no hyphen was present === invalid code
+            return [];
+        }
+
+        // look up the asn entity
+        $asnres = findMetadataSimple("asn", $splitcode[0], null, null, null,
+            false, null, null);
+
+        if (count($asnres) != 1) {
+            // should only get one result!
+            return [];
+        }
+
+        // look up the geo entity (region if the code begins with a digit,
+        // country otherwise)
+        $geores = findMetadataSimple(
+            (ctype_digit(substr($splitcode[1], 0, 1))) ? "region": "country",
+            null, null, null, false, null, null);
+        if (count($geores) != 1) {
+            // should only get one result!
+            return [];
+        }
+
+        // combine the two entities into a suitable result
+        $res = [array()];
+
+        $res[0]['code'] = $code;
+        $res[0]['type'] = $type;
+        $res[0]['name'] = $asnres[0]["name"] . " -- " . $geores[0].name;
+        $res[0]['attrs' = [
+            'fqid' = $type . "." . $code,
+            'asname' = $asnres[0]["attrs"]["name"],
+            'asorg' = $asnres[0]["attrs"]["org"]
+        ];
+
+        return $res;
+    }
+
+    /**
+     * Return a sets of entities
+     * @param null $type
+     * @param null $code
+     * @param null $name
+     * @param null $relatedType
+     * @param null $relatedCode
+     * @param null $limit
+     * @param bool $wildcard
+     * @return int|mixed|string
+     */
+    public function findMetadata($type=null, $code=null, $name=null, $limit=null, $page=null, $wildcard=false,
+                                 $relatedType=null, $relatedCode=null)
+    {
+        if ($type == "geoasn") {
+            // only supporting direct lookups for geoasn pairs
+            return findMetadataComposite($type, $code);
+        }
+        return findMetadataSimple($type, $code, $name, $limit, $page,
+            $wildcard, $relatedType, $relatedCode);
     }
 }
