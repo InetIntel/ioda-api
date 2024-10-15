@@ -278,6 +278,19 @@ class MetadataEntity
         $this->attributes->add($attr);  // XXX what if count already exists?
     }
 
+    public function getOrg() : ?string
+    {
+    	return $this->getAttribute("org");
+    }
+
+    public function setOrg(string $org)
+    {
+        $attr = new MetadataEntityAttribute();
+        $attr->setKey("org");
+        $attr->setValue($org);
+        $this->attributes->add($attr);  // XXX what if org already exists?
+    }
+
     /**
      * Get relationships
      *

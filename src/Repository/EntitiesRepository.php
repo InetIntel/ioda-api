@@ -36,6 +36,7 @@
 namespace App\Repository;
 
 use App\Entity\MetadataEntity;
+use App\Entity\MetadataEntityType;
 use Doctrine\ORM\Query\ResultSetMappingBuilder;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -46,6 +47,10 @@ class EntitiesRepository extends ServiceEntityRepository
 
     public function __construct(ManagerRegistry $registry)
     {
+	$this->geoasnType = new MetadataEntityType();
+	$this->geoasnType->setId(5);
+	$this->geoasnType->setType("geoasn");
+
         parent::__construct($registry, MetadataEntity::class);
     }
 
@@ -157,8 +162,8 @@ class EntitiesRepository extends ServiceEntityRepository
         }
 
         // look up the asn entity
-        $asnres = findMetadataSimple("asn", $splitcode[0], null, null, null,
-            false, null, null);
+	$asnres = $this->findMetadataSimple("asn", $splitcode[0], null, null,
+		null, false, null, null);
 
         if (count($asnres) != 1) {
             // should only get one result!
@@ -167,25 +172,22 @@ class EntitiesRepository extends ServiceEntityRepository
 
         // look up the geo entity (region if the code begins with a digit,
         // country otherwise)
-        $geores = findMetadataSimple(
+        $geores = $this->findMetadataSimple(
             (ctype_digit(substr($splitcode[1], 0, 1))) ? "region": "country",
-            null, null, null, false, null, null);
+            $splitcode[1], null, null, null, false, null, null);
         if (count($geores) != 1) {
             // should only get one result!
             return [];
         }
 
         // combine the two entities into a suitable result
-        $res = [array()];
+        $res = [new MetadataEntity()];
 
-        $res[0]['code'] = $code;
-        $res[0]['type'] = $type;
-        $res[0]['name'] = $asnres[0]["name"] . " -- " . $geores[0].name;
-        $res[0]['attrs' = [
-            'fqid' = $type . "." . $code,
-            'asname' = $asnres[0]["attrs"]["name"],
-            'asorg' = $asnres[0]["attrs"]["org"]
-        ];
+        $res[0]->setCode($code);
+        $res[0]->setType($this->geoasnType);
+        $res[0]->setName($asnres[0]->getName() ." -- ". $geores[0]->getName());
+	$res[0]->setFQID($type . "." . $code);
+	$res[0]->setOrg($asnres[0]->getOrg());
 
         return $res;
     }
@@ -201,14 +203,15 @@ class EntitiesRepository extends ServiceEntityRepository
      * @param bool $wildcard
      * @return int|mixed|string
      */
-    public function findMetadata($type=null, $code=null, $name=null, $limit=null, $page=null, $wildcard=false,
+    public function findMetadata($type=null, $code=null, $name=null,
+	    $limit=null, $page=null, $wildcard=false,
                                  $relatedType=null, $relatedCode=null)
     {
         if ($type == "geoasn") {
             // only supporting direct lookups for geoasn pairs
-            return findMetadataComposite($type, $code);
+            return $this->findMetadataComposite($type, $code);
         }
-        return findMetadataSimple($type, $code, $name, $limit, $page,
+        return $this->findMetadataSimple($type, $code, $name, $limit, $page,
             $wildcard, $relatedType, $relatedCode);
     }
 }
