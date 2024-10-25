@@ -138,6 +138,8 @@ class EntitiesRepository extends ServiceEntityRepository
         /** @var $prop \ReflectionProperty */
         $prop = $this->getClassMetadata()->reflFields["relationships"];
         foreach ($res as &$entity) {
+            $entity->setSubname($entity->getType()->getType(),
+                    $entity->getName());
             $prop->getValue($entity)->setInitialized(true);
         }
 
@@ -145,49 +147,84 @@ class EntitiesRepository extends ServiceEntityRepository
 
     }
 
-    private function findMetadataComposite($type, $code)
+    private function findMetadataComposite($type, $codestring)
     {
         $em = $this->getEntityManager();
         $rsm = new ResultSetMappingBuilder($em, ResultSetMappingBuilder::COLUMN_RENAMING_INCREMENT);
         $rsm->addRootEntityFromClassMetadata('App\Entity\MetadataEntity', 'm');
 
-        // split the code into the asn part and the geo part
-        if ($code === null) {
+        if ($codestring === null) {
             return [];
         }
-        $splitcode = explode('-', $code);
-        if (count($splitcode) == 1) {
-            // no hyphen was present === invalid code
-            return [];
+        $codes=null;
+        if (isset($codestring)) {
+            $codes = explode(",", $codestring);
         }
 
-        // look up the asn entity
-	$asnres = $this->findMetadataSimple("asn", $splitcode[0], null, null,
-		null, false, null, null);
+        $res = [];
 
-        if (count($asnres) != 1) {
-            // should only get one result!
-            return [];
+        foreach($codes as $code) {
+            // split the code into the asn part and the geo part
+            $splitcode = explode('-', $code);
+            if (count($splitcode) == 1) {
+                // no hyphen was present === invalid code
+                continue;
+            }
+
+            // look up the asn entity
+            $asnres = $this->findMetadataSimple("asn", $splitcode[0], null,
+                    null, null, false, null, null);
+
+            if (count($asnres) != 1) {
+                // should only get one result!
+                continue;
+            }
+
+            // look up the geo entity (region if the code begins with a digit,
+            // country otherwise)
+            $geotype = ctype_digit(substr($splitcode[1], 0, 1)) ? "region":
+                    "country";
+            $geores = $this->findMetadataSimple($geotype,
+                        $splitcode[1], null, null, null, false,
+                        null, null);
+
+            if (count($geores) != 1) {
+                // should only get one result!
+                continue;
+            }
+
+            // look up related entities for the ASN and confirm that our geo
+            // entity is in that list
+            $related = $this->findMetadataSimple($geotype, null,
+                    $geores[0]->getName(), null, null, false, "asn",
+                    $asnres[0]->getCode());
+
+            $found=false;
+            foreach($related as $r) {
+                if ($r->getCode() == $geores[0]->getCode()) {
+                    $found=true;
+                    break;
+                }
+            }
+
+            if (! $found) {
+                continue;
+            }
+
+            // combine the two entities into a suitable result
+            $combined = new MetadataEntity();
+
+            $combined->setCode($code);
+            $combined->setType($this->geoasnType);
+            $combined->setName($asnres[0]->getName() ." -- ". $geores[0]->getName());
+            $combined->setFQID($type . "." . $code);
+            $combined->setOrg($asnres[0]->getOrg());
+
+            $combined->setSubname("asn", $asnres[0]->getName());
+            $combined->setSubname($geores[0]->getType()->getType(),
+                    $geores[0]->getName());
+            array_push($res, $combined);
         }
-
-        // look up the geo entity (region if the code begins with a digit,
-        // country otherwise)
-        $geores = $this->findMetadataSimple(
-            (ctype_digit(substr($splitcode[1], 0, 1))) ? "region": "country",
-            $splitcode[1], null, null, null, false, null, null);
-        if (count($geores) != 1) {
-            // should only get one result!
-            return [];
-        }
-
-        // combine the two entities into a suitable result
-        $res = [new MetadataEntity()];
-
-        $res[0]->setCode($code);
-        $res[0]->setType($this->geoasnType);
-        $res[0]->setName($asnres[0]->getName() ." -- ". $geores[0]->getName());
-	$res[0]->setFQID($type . "." . $code);
-	$res[0]->setOrg($asnres[0]->getOrg());
 
         return $res;
     }

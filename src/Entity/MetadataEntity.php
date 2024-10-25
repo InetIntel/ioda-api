@@ -141,6 +141,12 @@ class MetadataEntity
     private $attrs;
 
     /**
+     * @Groups({"public"})
+     * @var array
+     */
+    private $subnames;
+
+    /**
      * Constructor
      */
     public function __construct()
@@ -209,6 +215,26 @@ class MetadataEntity
         $this->name = $name;
         return $this;
     }
+
+    public function setSubname(string $namekey, string $name): MetadataEntity
+    {
+        $this->subnames[$namekey] = $name;
+        return $this;
+    }
+
+    public function getSubname(string $namekey, string $name): ?string
+    {
+        if (array_key_exists($namekey, $this->subnames)) {
+            return $this->subnames[$namekey];
+        }
+        return null;
+    }
+
+    public function getSubnames(): array
+    {
+        return $this->subnames;
+    }
+
 
     /**
      * @return MetadataEntityType
