@@ -409,10 +409,8 @@ class SignalsService
         $u = $until->getEpochTime();
         $finalres = [];
         $entityType = $entities[0]->getType()->getType();
-
         $eras = $this->dataErasService->getEras($datasource, $entityType,
                 $f, $u);
-
         foreach ($eras as $era) {
             if ($era->getStartTime() == 0) {
                 continue;

@@ -207,7 +207,8 @@ class EntitiesRepository extends ServiceEntityRepository
 	    $limit=null, $page=null, $wildcard=false,
                                  $relatedType=null, $relatedCode=null)
     {
-        if ($type == "geoasn") {
+        if ($type == "geoasn" || $type == "geoasn_country" ||
+                $type == "geoasn_region") {
             // only supporting direct lookups for geoasn pairs
             return $this->findMetadataComposite($type, $code);
         }
