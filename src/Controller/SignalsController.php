@@ -167,7 +167,7 @@ class SignalsController extends ApiController
      *     description="Type of the entity, e.g. country, region, asn",
      *     schema=@SWG\Schema(
      *     	type="string",
-     *          enum={"continent", "country", "region", "county", "asn"}
+     *          enum={"continent", "country", "region", "geoasn", "asn"}
      *     ),
      *     required=false,
      * )
@@ -377,7 +377,7 @@ class SignalsController extends ApiController
      *     description="Type of the entity, e.g. country, region, asn",
      *     schema=@SWG\Schema(
      *         type="string",
-     *         enum={"continent", "country", "region", "county", "asn"}
+     *         enum={"continent", "country", "region", "asn"}
      *     ),
      *     required=false,
      * )
