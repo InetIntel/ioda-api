@@ -232,6 +232,9 @@ class MetadataEntity
 
     public function getSubnames(): array
     {
+        if ($this->subnames === null) {
+            return [];
+        }
         return $this->subnames;
     }
 
