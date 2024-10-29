@@ -96,6 +96,7 @@ class InfluxService
         "region" => [ "region_code" ],
         "county" => [ "county_code" ],
 	    "asn" => [ "asn" ],
+        "geoasn" => [],     // unused
     ];
 
     const FIELD_MAP = [
@@ -538,29 +539,32 @@ END;
         $field = $era->getField();
         $bucket = $era->getBucket();
         $queryterm = $era->getQueryTerm();
-        $code_field =  self::CODE_FIELDS["$entityType"];
-        $measurement = self::FIELD_MAP[$datasource]["$entityType"]["measurement"];
         $extra = self::FIELD_MAP[$datasource]["extra"];
         $datasource_id = $era->getGrafanaSource();
 
-        if ($datasource == "gtr" or ($datasource == "gtr-norm"
-                            && $extraParams != null)) {
-
-            $queries = $this->buildGTRFluxQueries($entities, $step,
-                    $datasource_id, $field, $code_field, $measurement,
-                    $bucket, $datasource, $extraParams);
-        } else if ($datasource == "gtr-norm") {
-
-            $queries = $this->buildGTRBlendFluxQueries($entities, $step,
-                    $datasource_id, $field, $code_field, $measurement,
-                    $bucket);
-        } else if ($entityType == "geoasn") {
+        if ($entityType == "geoasn") {
             $queries = $this->buildGeoasnFluxQueries($entities, $step,
                     $datasource, $datasource_id, $field, $bucket, $queryterm);
         } else {
-            $queries = $this->buildStandardFluxQueries($entities, $step,
-                $datasource_id, $field, $code_field, $measurement,
-                $bucket, $extra, $queryterm);
+            $code_field = self::CODE_FIELDS["$entityType"];
+            $measurement = self::FIELD_MAP[$datasource]["$entityType"]["measurement"];
+
+            if ($datasource == "gtr" or ($datasource == "gtr-norm"
+                                && $extraParams != null)) {
+
+                $queries = $this->buildGTRFluxQueries($entities, $step,
+                        $datasource_id, $field, $code_field, $measurement,
+                        $bucket, $datasource, $extraParams);
+            } else if ($datasource == "gtr-norm") {
+
+                $queries = $this->buildGTRBlendFluxQueries($entities, $step,
+                        $datasource_id, $field, $code_field, $measurement,
+                        $bucket);
+            } else {
+                $queries = $this->buildStandardFluxQueries($entities, $step,
+                    $datasource_id, $field, $code_field, $measurement,
+                    $bucket, $extra, $queryterm);
+            }
         }
 
         $combined_queries = implode(",", $queries);
