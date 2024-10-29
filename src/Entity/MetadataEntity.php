@@ -141,6 +141,12 @@ class MetadataEntity
     private $attrs;
 
     /**
+     * @Groups({"public"})
+     * @var array
+     */
+    private $subnames;
+
+    /**
      * Constructor
      */
     public function __construct()
@@ -210,6 +216,26 @@ class MetadataEntity
         return $this;
     }
 
+    public function setSubname(string $namekey, string $name): MetadataEntity
+    {
+        $this->subnames[$namekey] = $name;
+        return $this;
+    }
+
+    public function getSubname(string $namekey, string $name): ?string
+    {
+        if (array_key_exists($namekey, $this->subnames)) {
+            return $this->subnames[$namekey];
+        }
+        return null;
+    }
+
+    public function getSubnames(): array
+    {
+        return $this->subnames;
+    }
+
+
     /**
      * @return MetadataEntityType
      */
@@ -276,6 +302,19 @@ class MetadataEntity
         $attr->setKey("ip_count");
         $attr->setValue($count);
         $this->attributes->add($attr);  // XXX what if count already exists?
+    }
+
+    public function getOrg() : ?string
+    {
+    	return $this->getAttribute("org");
+    }
+
+    public function setOrg(string $org)
+    {
+        $attr = new MetadataEntityAttribute();
+        $attr->setKey("org");
+        $attr->setValue($org);
+        $this->attributes->add($attr);  // XXX what if org already exists?
     }
 
     /**

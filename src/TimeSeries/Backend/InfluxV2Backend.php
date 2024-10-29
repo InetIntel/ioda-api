@@ -85,8 +85,8 @@ class InfluxV2Backend
      * @return array
      * @throws BackendException
      */
-	private function sendQuery(string $query, string $secret,
-		string $influx_uri): array {
+    private function sendQuery(string $query, string $secret,
+        string $influx_uri): array {
         if(!$secret){
             throw new BackendException("Missing INFLUXDB_SECRET environment variable");
         }
@@ -111,17 +111,47 @@ class InfluxV2Backend
         // $output contains the output string
         $output = curl_exec($ch);
         // close curl resource to free up system resources
-	curl_close($ch);
+        curl_close($ch);
         return json_decode($output, true);
     }
 
+    private function mergeFrames($frames, $entityCode) {
+        $tsmap = array();
+
+        if (count($frames) <= 1) {
+            return $frames[0]["data"]["values"];
+        }
+        foreach($frames as $f) {
+            foreach($f["data"]["values"][0] as $ind => $timestamp) {
+                // assumes there is a one-to-one mapping, which there
+                // really should be
+                $val = $f["data"]["values"][1][$ind];
+
+                if (!array_key_exists($timestamp, $tsmap)) {
+                    $tsmap[$timestamp] = $val;
+                } else if ($tsmap[$timestamp] == null) {
+                    $tsmap[$timestamp] = $val;
+                }
+
+            }
+        }
+        ksort($tsmap);
+        $res = [ [], [] ];
+
+        foreach($tsmap as $ts => $val) {
+            array_push($res[0], $ts);
+            array_push($res[1], $val);
+        }
+        return $res;
+    }
+
     private function parseReturnValue($responseJson, $finalresult,
-       	    $queriedStep) {
+        $queriedStep) {
         if (!array_key_exists("results", $responseJson)) {
-	    return $finalresult;
-	}
-	foreach($responseJson["results"] as $entityCode => $res) {
-            $raw_values = $res["frames"][0]["data"]["values"];
+            return $finalresult;
+        }
+        foreach($responseJson["results"] as $entityCode => $res) {
+            $raw_values = $this->mergeFrames($res["frames"], $entityCode);
             if(count($raw_values)!=2){
                 continue;
             }
@@ -144,12 +174,12 @@ class InfluxV2Backend
                 $newSeries->setUntil($until);
                 $newSeries->setStep($step);
                 $newSeries->setValues($raw_values[1]);
-		$finalresult[$entityCode] = $newSeries;
+                $finalresult[$entityCode] = $newSeries;
             } else {
                 $series = $finalresult[$entityCode];
                 // we should only ever be appending time periods that
                 // immediately follow the existing series
-		if ($series->getUntil() == $from) {
+                if ($series->getUntil() == $from) {
                     if ($series->getUntil() < $until) {
                         $series->setUntil($until);
                         $series->appendValues($raw_values[1]);
@@ -159,7 +189,7 @@ class InfluxV2Backend
                             $series->setStep($step);
                         }
                     }
-		}
+                }
             }
         }
 
@@ -174,10 +204,10 @@ class InfluxV2Backend
      * @throws BackendException
      */
     public function queryInfluxV2(string $query, string $secret,
-		string $influxuri, array $finalres, int $step): array
+        string $influxuri, array $finalres, int $step): array
     {
         // send query and process response
-	    $res = $this->sendQuery($query, $secret, $influxuri);
-	    return $this->parseReturnValue($res, $finalres, $step);
+        $res = $this->sendQuery($query, $secret, $influxuri);
+        return $this->parseReturnValue($res, $finalres, $step);
     }
 }

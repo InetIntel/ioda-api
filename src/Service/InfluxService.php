@@ -91,11 +91,12 @@ class InfluxService
     const BGP_EXTRA_CLAUSE = " and r.ip_version == \"v4\" and r.visibility_threshold == \"min_50%_ff_peer_asns\"";
 
     const CODE_FIELDS = [
-        "continent" => "continent_code",
-        "country" => "country_code",
-        "region" => "region_code",
-        "county" => "county_code",
-        "asn" => "asn",
+        "continent" => [ "continent_code" ],
+        "country" => [ "country_code" ],
+        "region" => [ "region_code" ],
+        "county" => [ "county_code" ],
+	    "asn" => [ "asn" ],
+        "geoasn" => [],     // unused
     ];
 
     const FIELD_MAP = [
@@ -115,6 +116,12 @@ class InfluxService
             "asn" => [
                 "measurement" => "asn_visibility",
             ],
+            "geoasn_country" => [
+                "measurement" => "geoasn_country_visibility",
+            ],
+            "geoasn_region" => [
+                "measurement" => "geoasn_region_visibility",
+            ],
             "extra" => self::BGP_EXTRA_CLAUSE,
         ],
         "ping-slash24" => [
@@ -133,6 +140,12 @@ class InfluxService
             "asn" => [
                 "measurement" => "asn_slash24",
             ],
+            "geoasn_country" => [
+                "measurement" => "geoasn_country_slash24",
+            ],
+            "geoasn_region" => [
+                "measurement" => "geoasn_region_slash24",
+            ],
             "extra" => "",
         ],
         "merit-nt" => [
@@ -150,6 +163,12 @@ class InfluxService
             ],
             "asn" => [
                 "measurement" => "origin_asn",
+            ],
+            "geoasn_country" => [
+                "measurement" => "geoasn_country",
+            ],
+            "geoasn_region" => [
+                "measurement" => "geoasn_region",
             ],
             "extra" => "",
         ],
@@ -278,7 +297,7 @@ END;
     }
 
     private function buildGTRFluxQueries(array $entities, int $step,
-        int $datasource_id, string $field, string $code_field,
+        int $datasource_id, string $field, array $code_fields,
         string $measurement,
         string $bucket, string $datasource, ?string $productList)
     {
@@ -289,6 +308,12 @@ END;
         } else {
             $products = explode(",", $productList);
         }
+
+        // should only be a single code field for GTR anyway
+        if (count($code_fields) === 0) {
+            return [];
+        }
+        $code_field = $code_fields[0];
 
         foreach($entities as $entity){
             $entityCode = $entity->getCode();
@@ -344,8 +369,80 @@ END;
         return $queries;
     }
 
+    private function buildGeoasnFluxQueries(array $entities, int $step,
+            string $datasource, int $datasource_id, string $field,
+            string $bucket, string $qterm)
+    {
+        $fluxQueries = [];
+
+        foreach($entities as $entity){
+            $entityCode = $entity->getCode();
+            $entityType = $entity->getType();
+            $splitCode = explode("-", $entityCode);
+
+            if (count($splitCode) != 2) {
+                error_log("Invalid entity code for $entityType: $entityCode");
+                continue;
+            }
+
+            if (ctype_digit(substr($splitCode[1], 0, 1))) {
+                $measurement=self::FIELD_MAP[$datasource]["geoasn_region"]["measurement"];
+                $code_field = array_merge(self::CODE_FIELDS["asn"],
+                        self::CODE_FIELDS["region"]);
+            } else {
+                $measurement=self::FIELD_MAP[$datasource]["geoasn_country"]["measurement"];
+                $code_field = array_merge(self::CODE_FIELDS["asn"],
+                        self::CODE_FIELDS["country"]);
+            }
+
+            $codeclause = "";
+            $ind = 0;
+            foreach($code_field as $codef) {
+                $seekcode = $splitCode[$ind];
+                if ($ind === 0) {
+                    $codeclause = "r.$codef == \"$seekcode\"";
+                } else {
+                    $codeclause = $codeclause . " and r.$codef == \"$seekcode\"";
+                }
+                $ind++;
+            }
+
+            $q = <<< END
+                from(bucket: "$bucket")
+                |> range(start: v.timeRangeStart, stop:v.timeRangeStop)
+                |> filter(fn: (r) =>
+                        r._measurement == "$measurement" and
+                        r._field == "$field" and
+                        $codeclause
+                        )
+                |> aggregateWindow(every: ${step}s, fn: mean, timeSrc: "_start",
+                        createEmpty: true)
+                |> yield(name: "mean")
+                END;
+            $q = str_replace("\n", '', $q);
+            $q = str_replace("\"", '\\"', $q);
+            $fluxQueries[$entityCode] = $q;
+        }
+
+        $queries = [];
+        foreach($fluxQueries as $entityCode => $fluxQuery){
+            // NOTE: the maxDataPoints needs to be set to a very large value to avoid grafana stripping data off
+            //       currently set to be 31536000, which should be equivalent to 10 years
+            $queries[] = <<<END
+            {
+                "query": "$fluxQuery",
+                    "refId":"$entityCode",
+                    "datasourceId": $datasource_id,
+                    "intervalMs": 60000,
+                    "maxDataPoints": 31536000
+            }
+            END;
+        }
+        return $queries;
+    }
+
     private function buildStandardFluxQueries(array $entities, int $step,
-        int $datasource_id, string $field, string $code_field,
+        int $datasource_id, string $field, array $code_field,
             string $measurement, string $bucket, string $extra, string $qterm)
     {
 
@@ -357,13 +454,34 @@ END;
 
         foreach($entities as $entity){
             $entityCode = $entity->getCode();
+            $entityType = $entity->getType();
+
+            $splitCode = explode("-", $entityCode);
+
+            if (count($code_field) != count($splitCode)) {
+                error_log("Invalid entity code for $entityType: $entityCode");
+                continue;
+            }
+
+            $codeclause = "";
+            $ind = 0;
+            foreach($code_field as $codef) {
+                $seekcode = $splitCode[$ind];
+                if ($ind === 0) {
+                    $codeclause = "r.$codef == \"$seekcode\"";
+                } else {
+                    $codeclause = $codeclause . " and r.$codef == \"$seekcode\"";
+                }
+                $ind++;
+            }
+
             $q = <<< END
 from(bucket: "$bucket")
   |> range(start: v.timeRangeStart, stop:v.timeRangeStop)
   |> filter(fn: (r) =>
     r._measurement == "$measurement" and
     r._field == "$field" and
-    r.$code_field == "$entityCode"
+    $codeclause
     $extra
   )
   |> aggregateWindow(every: ${step}s, fn: mean, timeSrc: "_start",
@@ -421,26 +539,32 @@ END;
         $field = $era->getField();
         $bucket = $era->getBucket();
         $queryterm = $era->getQueryTerm();
-        $code_field =  self::CODE_FIELDS["$entityType"];
-        $measurement = self::FIELD_MAP[$datasource]["$entityType"]["measurement"];
         $extra = self::FIELD_MAP[$datasource]["extra"];
         $datasource_id = $era->getGrafanaSource();
 
-        if ($datasource == "gtr" or ($datasource == "gtr-norm"
-                            && $extraParams != null)) {
-
-            $queries = $this->buildGTRFluxQueries($entities, $step,
-                    $datasource_id, $field, $code_field, $measurement,
-                    $bucket, $datasource, $extraParams);
-        } else if ($datasource == "gtr-norm") {
-
-            $queries = $this->buildGTRBlendFluxQueries($entities, $step,
-                    $datasource_id, $field, $code_field, $measurement,
-                    $bucket);
+        if ($entityType == "geoasn") {
+            $queries = $this->buildGeoasnFluxQueries($entities, $step,
+                    $datasource, $datasource_id, $field, $bucket, $queryterm);
         } else {
-            $queries = $this->buildStandardFluxQueries($entities, $step,
-                $datasource_id, $field, $code_field, $measurement,
-                $bucket, $extra, $queryterm);
+            $code_field = self::CODE_FIELDS["$entityType"];
+            $measurement = self::FIELD_MAP[$datasource]["$entityType"]["measurement"];
+
+            if ($datasource == "gtr" or ($datasource == "gtr-norm"
+                                && $extraParams != null)) {
+
+                $queries = $this->buildGTRFluxQueries($entities, $step,
+                        $datasource_id, $field, $code_field, $measurement,
+                        $bucket, $datasource, $extraParams);
+            } else if ($datasource == "gtr-norm") {
+
+                $queries = $this->buildGTRBlendFluxQueries($entities, $step,
+                        $datasource_id, $field, $code_field, $measurement,
+                        $bucket);
+            } else {
+                $queries = $this->buildStandardFluxQueries($entities, $step,
+                    $datasource_id, $field, $code_field, $measurement,
+                    $bucket, $extra, $queryterm);
+            }
         }
 
         $combined_queries = implode(",", $queries);

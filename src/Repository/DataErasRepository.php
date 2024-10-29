@@ -89,7 +89,6 @@ class DataErasRepository extends ServiceEntityRepository
                 'end' => $until,
              ]);
         $res = $q->getResult();
-
         return $res;
     }
 }
