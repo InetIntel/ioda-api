@@ -300,7 +300,7 @@ class OutagesController extends ApiController
      *     description="Type of the entity, e.g. country, region, asn",
      *     schema=@SWG\Schema(
      *         type="string",
-     *         enum={"continent", "country", "region", "county", "asn"}
+     *         enum={"continent", "country", "region", "geoasn", "asn"}
      *     ),
      *     required=false,
      * )
@@ -456,7 +456,6 @@ class OutagesController extends ApiController
         }
 
 	$alerts = $alertService->findAlerts($from, $until, $entityType, $entityCode, $datasource, $limit, $page, $relatedTo[0], $relatedTo[1], $ignoreMethods);
-
         $env->setData($alerts);
         return $this->json($env);
     }
@@ -528,7 +527,7 @@ class OutagesController extends ApiController
      *     description="Type of the entity, e.g. country, region, asn",
      *     schema=@SWG\Schema(
      *         type="string",
-     *         enum={"continent", "country", "region", "county", "asn"}
+     *         enum={"continent", "country", "region", "geoasn", "asn"}
      *     ),
      *     required=false
      * )
@@ -775,7 +774,7 @@ class OutagesController extends ApiController
      *     description="Type of the entity, e.g. country, region, asn",
      *     schema=@SWG\Schema(
      *         type="string",
-     *         enum={"continent", "country", "region", "county", "asn"}
+     *         enum={"continent", "country", "region", "geoasn", "asn"}
      *     ),
      *     required=false,
      * )
