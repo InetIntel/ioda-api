@@ -47,11 +47,34 @@ class EntitiesRepository extends ServiceEntityRepository
 
     public function __construct(ManagerRegistry $registry)
     {
-	$this->geoasnType = new MetadataEntityType();
-	$this->geoasnType->setId(5);
-	$this->geoasnType->setType("geoasn");
+        $this->geoasnType = new MetadataEntityType();
+        $this->geoasnType->setId(5);
+        $this->geoasnType->setType("geoasn");
+
+        $this->cachedgeo = [];
 
         parent::__construct($registry, MetadataEntity::class);
+    }
+
+    private function lookupGeoNameCached($geocode) {
+        if (array_key_exists($geocode, $this->cachedgeo)) {
+            return $this->cachedgeo[$geocode];
+        }
+
+        // look up the geo entity (region if the code begins with a digit,
+        // country otherwise)
+        $geotype = ctype_digit(substr($geocode, 0, 1)) ? "region": "country";
+        $geores = $this->findMetadataSimple($geotype,
+                    $geocode, null, null, null, false,
+                    null, null);
+
+        if (count($geores) != 1) {
+            // should only get one result!
+            return null;
+        }
+
+        $this->cachedgeo[$geocode] = $geores[0]->getName();
+        return $this->cachedgeo[$geocode];
     }
 
     private function findMetadataSimple($type, $code,
@@ -133,100 +156,27 @@ class EntitiesRepository extends ServiceEntityRepository
 
         $res = $q->getResult();
 
-        // force results to never look up related entities
         // this effectively disables the getRelationships method
         /** @var $prop \ReflectionProperty */
         $prop = $this->getClassMetadata()->reflFields["relationships"];
         foreach ($res as &$entity) {
-            $entity->setSubname($entity->getType()->getType(),
-                    $entity->getName());
+            if ($type == "geoasn") {
+                $splitcode = explode("-", $entity->getCode());
+                if (count($splitcode) == 2) {
+                    $geotype = ctype_digit(substr($splitcode[1], 0, 1))
+                            ? "region": "country";
+                    $entity->setSubname("asn", "AS" . $splitcode[0]);
+                    $geoname = $this->lookupGeoNameCached($splitcode[1]);
+                    if ($geoname) {
+                        $entity->setSubname($geotype, $geoname);
+                    }
+                }
+            }
             $prop->getValue($entity)->setInitialized(true);
         }
 
         return $res;
 
-    }
-
-    private function findMetadataComposite($type, $codestring)
-    {
-        $em = $this->getEntityManager();
-        $rsm = new ResultSetMappingBuilder($em, ResultSetMappingBuilder::COLUMN_RENAMING_INCREMENT);
-        $rsm->addRootEntityFromClassMetadata('App\Entity\MetadataEntity', 'm');
-
-        if ($codestring === null) {
-            return [];
-        }
-        $codes=null;
-        if (isset($codestring)) {
-            $codes = explode(",", $codestring);
-        }
-
-        $res = [];
-
-        foreach($codes as $code) {
-            // split the code into the asn part and the geo part
-            $splitcode = explode('-', $code);
-            if (count($splitcode) == 1) {
-                // no hyphen was present === invalid code
-                continue;
-            }
-
-            // look up the asn entity
-            $asnres = $this->findMetadataSimple("asn", $splitcode[0], null,
-                    null, null, false, null, null);
-
-            if (count($asnres) != 1) {
-                // should only get one result!
-                continue;
-            }
-
-            // look up the geo entity (region if the code begins with a digit,
-            // country otherwise)
-            $geotype = ctype_digit(substr($splitcode[1], 0, 1)) ? "region":
-                    "country";
-            $geores = $this->findMetadataSimple($geotype,
-                        $splitcode[1], null, null, null, false,
-                        null, null);
-
-            if (count($geores) != 1) {
-                // should only get one result!
-                continue;
-            }
-
-            // look up related entities for the ASN and confirm that our geo
-            // entity is in that list
-            $related = $this->findMetadataSimple($geotype, null,
-                    $geores[0]->getName(), null, null, false, "asn",
-                    $asnres[0]->getCode());
-
-            $found=false;
-            foreach($related as $r) {
-                if ($r->getCode() == $geores[0]->getCode()) {
-                    $found=true;
-                    break;
-                }
-            }
-
-            if (! $found) {
-                continue;
-            }
-
-            // combine the two entities into a suitable result
-            $combined = new MetadataEntity();
-
-            $combined->setCode($code);
-            $combined->setType($this->geoasnType);
-            $combined->setName($asnres[0]->getName() ." -- ". $geores[0]->getName());
-            $combined->setFQID($type . "." . $code);
-            $combined->setOrg($asnres[0]->getOrg());
-
-            $combined->setSubname("asn", $asnres[0]->getName());
-            $combined->setSubname($geores[0]->getType()->getType(),
-                    $geores[0]->getName());
-            array_push($res, $combined);
-        }
-
-        return $res;
     }
 
     /**
@@ -244,11 +194,6 @@ class EntitiesRepository extends ServiceEntityRepository
 	    $limit=null, $page=null, $wildcard=false,
                                  $relatedType=null, $relatedCode=null)
     {
-        if ($type == "geoasn" || $type == "geoasn_country" ||
-                $type == "geoasn_region") {
-            // only supporting direct lookups for geoasn pairs
-            return $this->findMetadataComposite($type, $code);
-        }
         return $this->findMetadataSimple($type, $code, $name, $limit, $page,
             $wildcard, $relatedType, $relatedCode);
     }
