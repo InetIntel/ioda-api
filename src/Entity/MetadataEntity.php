@@ -338,7 +338,10 @@ class MetadataEntity
     public function getAttribute($key)
     {
         $this->initAttrs();
-        return $this->attrs[$key];
+        if (array_key_exists($key, $this->attrs)) {
+            return $this->attrs[$key];
+        }
+        return null;
     }
 
     /**
