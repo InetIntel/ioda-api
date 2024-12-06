@@ -86,11 +86,17 @@ class EntitiesRepository extends ServiceEntityRepository
 
         /* exclude counties from search results because we do not collect
          * county-level data any more
+         *
+         * TEMPORARY?: remove geoasn when querying with no explcit type
+         * because a) the only context where we have no type is when we are
+         * populating the search dropdown and b) we don't want geoasn entities
+         * to show up there because they are not supported in the rest of the
+         * UI.
          */
         $parameters = array_filter(
             [
                 'm.code != :unknown',
-                (!empty($type) ? 'mt.type ILIKE :type':'mt.type != \'county\''),
+                (!empty($type) ? 'mt.type ILIKE :type':'mt.type != \'county\' and mt.type != \'geoasn\''),
                 (!($code === null || $code === '') ? 'm.code IN (:codes)':null),
                 (!($name === null || $name === '') ?
                             'm.name ILIKE :wildcard_name' : null),
