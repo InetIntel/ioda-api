@@ -86,11 +86,14 @@ class EntitiesRepository extends ServiceEntityRepository
 
         /* exclude counties from search results because we do not collect
          * county-level data any more
+         *
+         * TEMPORARY: exclude geoasn because we don't want them to appear in
+         * the search bar
          */
         $parameters = array_filter(
             [
                 'm.code != :unknown',
-                (!empty($type) ? 'mt.type ILIKE :type':'mt.type != \'county\''),
+                (!empty($type) ? 'mt.type ILIKE :type':'mt.type != \'county\' and mt.type != \'geoasn\''),
                 (!($code === null || $code === '') ? 'm.code IN (:codes)':null),
                 (!($name === null || $name === '') ?
                             'm.name ILIKE :wildcard_name' : null),

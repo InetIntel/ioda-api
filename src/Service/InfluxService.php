@@ -183,6 +183,15 @@ class InfluxService
                 "measurement" => "google_tr",
             ],
             "extra" => " and r.product == \"WEB_SEARCH\"",
+        ],
+        "upstream-delay-penult-asns" => [
+            "asn" => [
+                "measurement" => "yarrp_penultimate_as_freq",
+            ],
+            "extra" => "",
+        ],
+        "upstream-delay-penult-e2e-latency" => [
+            "extra" => "",
         ]
     ];
 
@@ -441,6 +450,103 @@ END;
         return $queries;
     }
 
+    private function buildUpstreamDelayLatencyFluxQueries(
+            array $entities, int $step, int $datasource_id, string $bucket,
+            string $qterm) {
+
+        $fluxQueries = [];
+        if ($qterm !== "") {
+            $qterm = " and " . $qterm;
+        }
+        foreach($entities as $entity){
+            $entityCode = $entity->getCode();
+            $entityType = $entity->getType();
+            if ($entityType->getType() !== "asn") {
+                continue;
+            }
+            $q = <<< END
+from(bucket: "$bucket")
+  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)
+  |> filter(fn: (r) =>
+    r._measurement != "yarrp_penultimate_as_freq" and
+    r.target_as == "$entityCode"
+    $qterm
+  )
+  |> aggregateWindow(every: ${step}s, fn: median, timeSrc: "_start",
+    createEmpty: true)
+  |> yield(name: "latencies")
+END;
+            $q = str_replace("\n", '', $q);
+            $q = str_replace("\"", '\\"', $q);
+            $fluxQueries[$entityCode] = $q;
+        }
+
+        $queries = [];
+        foreach($fluxQueries as $entityCode => $fluxQuery){
+            // NOTE: the maxDataPoints needs to be set to a very large value to avoid grafana stripping data off
+            //       currently set to be 31536000, which should be equivalent to 10 years
+            $queries[] = <<<END
+    {
+      "query": "$fluxQuery",
+      "refId":"$entityCode",
+      "datasourceId": $datasource_id,
+      "intervalMs": 60000,
+      "maxDataPoints": 31536000
+    }
+END;
+    }
+    return $queries;
+    }
+
+    private function buildUpstreamDelayPenultimateASFluxQueries(
+            array $entities, int $step, int $datasource_id, string $bucket,
+            string $qterm) {
+
+        $fluxQueries = [];
+        if ($qterm !== "") {
+            $qterm = " and " . $qterm;
+        }
+        foreach($entities as $entity){
+            $entityCode = $entity->getCode();
+            $entityType = $entity->getType();
+            if ($entityType->getType() !== "asn") {
+                continue;
+            }
+            $q = <<< END
+from(bucket: "$bucket")
+  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)
+  |> filter(fn: (r) =>
+    r._measurement == "yarrp_penultimate_as_freq" and
+    r._field == "penultimate_as_count" and
+    r.target_as == "$entityCode"
+    $qterm
+  )
+  |> aggregateWindow(every: ${step}s, fn: median, timeSrc: "_start",
+    createEmpty: true)
+  |> yield(name: "median")
+END;
+            $q = str_replace("\n", '', $q);
+            $q = str_replace("\"", '\\"', $q);
+            $fluxQueries[$entityCode] = $q;
+        }
+
+        $queries = [];
+        foreach($fluxQueries as $entityCode => $fluxQuery){
+            // NOTE: the maxDataPoints needs to be set to a very large value to avoid grafana stripping data off
+            //       currently set to be 31536000, which should be equivalent to 10 years
+            $queries[] = <<<END
+    {
+      "query": "$fluxQuery",
+      "refId":"$entityCode",
+      "datasourceId": $datasource_id,
+      "intervalMs": 60000,
+      "maxDataPoints": 31536000
+    }
+END;
+    }
+    return $queries;
+    }
+
     private function buildStandardFluxQueries(array $entities, int $step,
         int $datasource_id, string $field, array $code_field,
             string $measurement, string $bucket, string $extra, string $qterm)
@@ -542,7 +648,14 @@ END;
         $extra = self::FIELD_MAP[$datasource]["extra"];
         $datasource_id = $era->getGrafanaSource();
 
-        if ($entityType == "geoasn") {
+        if ($datasource == "upstream-delay-penult-e2e-latency") {
+            $queries = $this->buildUpstreamDelayLatencyFluxQueries($entities,
+                    $step, $datasource_id, $bucket, $queryterm);
+
+        } else if ($datasource == "upstream-delay-penult-asns") {
+            $queries = $this->buildUpstreamDelayPenultimateASFluxQueries(
+                    $entities, $step, $datasource_id, $bucket, $queryterm);
+        } else if ($entityType == "geoasn") {
             $queries = $this->buildGeoasnFluxQueries($entities, $step,
                     $datasource, $datasource_id, $field, $bucket, $queryterm);
         } else {
