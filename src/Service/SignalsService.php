@@ -118,6 +118,7 @@ class SignalsService
 	    "ucsd-nt" => [ -1 ],
 	    "gtr" => [ -1 ],
 	    "gtr-norm" => [ -1 ],
+        "upstream-delay-penult-asns" => [ -1 ]
     ];
 
     /**
@@ -409,7 +410,19 @@ class SignalsService
         $u = $until->getEpochTime();
         $finalres = [];
         $entityType = $entities[0]->getType()->getType();
-        $eras = $this->dataErasService->getEras($datasource, $entityType,
+
+        if ($datasource == "upstream-delay-penult-asns") {
+            $era_ds = "upstream-delay";
+            $mergeStrat = "append";
+
+        } else if ($datasource == "upstream-delay-penult-e2e-latency") {
+            $era_ds = "upstream-delay";
+            $mergeStrat = "append";
+        } else {
+            $era_ds = $datasource;
+            $mergeStrat = "keepfirst";
+        }
+        $eras = $this->dataErasService->getEras($era_ds, $entityType,
                 $f, $u);
         foreach ($eras as $era) {
             if ($era->getStartTime() == 0) {
@@ -421,9 +434,9 @@ class SignalsService
             $query = $this->influxService->buildFluxQuery($datasource,
                     $entities, new QueryTime($start), new QueryTime($fin),
                     $step, $era, $extraParam);
-
 	        $finalres = $this -> influxV2Backend -> queryInfluxV2($query,
-		            $this->influxSecret, $this->influxURI, $finalres, $step);
+		            $this->influxSecret, $this->influxURI, $finalres, $step,
+                    $mergeStrat);
 
         }
 

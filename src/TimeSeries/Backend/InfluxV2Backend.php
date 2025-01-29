@@ -104,9 +104,12 @@ class InfluxV2Backend
         ));
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $query);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 
         //return the transfer as a string
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_VERBOSE, true);
+        curl_setopt($ch, CURLOPT_STDERR, fopen('/tmp/curl.log', 'a+'));
 
         // $output contains the output string
         $output = curl_exec($ch);
@@ -115,25 +118,62 @@ class InfluxV2Backend
         return json_decode($output, true);
     }
 
-    private function mergeFrames($frames, $entityCode) {
+    private function mergeFrames($frames, $entityCode, $mergeStrat) {
         $tsmap = array();
 
         if (count($frames) <= 1) {
             return $frames[0]["data"]["values"];
         }
         foreach($frames as $f) {
+            $schemainfo = $f["schema"]["fields"][1]["labels"];
+            $metric = $f["schema"]["fields"][1]["name"];
+
+            $keystring="";
+            foreach($schemainfo as $kp_key => $kp_value) {
+                if ($keystring != "") {
+                    $keystring = $keystring . "-" . $kp_key . "-" . $kp_value;
+                } else {
+                    $keystring = $kp_key . "-" . $kp_value;
+                }
+            }
+
             foreach($f["data"]["values"][0] as $ind => $timestamp) {
                 // assumes there is a one-to-one mapping, which there
                 // really should be
                 $val = $f["data"]["values"][1][$ind];
 
-                if (!array_key_exists($timestamp, $tsmap)) {
-                    $tsmap[$timestamp] = $val;
-                } else if ($tsmap[$timestamp] == null) {
-                    $tsmap[$timestamp] = $val;
+                if ($mergeStrat == "append") {
+                    if (!array_key_exists($timestamp, $tsmap)) {
+                        $tsmap[$timestamp] = array();
+                    }
+
+                    if (!array_key_exists($keystring, $tsmap[$timestamp])) {
+                        $tsmap[$timestamp][$keystring] = $schemainfo;
+                        $tsmap[$timestamp][$keystring]["agg_values"] = array();
+                    }
+                    $tsmap[$timestamp][$keystring]["agg_values"][$metric] = $val;
+
+                } else {
+                    if (!array_key_exists($timestamp, $tsmap)) {
+                        $tsmap[$timestamp] = $val;
+                    } else if ($tsmap[$timestamp] == null) {
+                        $tsmap[$timestamp] = $val;
+                    }
                 }
 
             }
+        }
+
+        if ($mergeStrat == "append") {
+            $finaltsmap = array();
+            foreach($tsmap as $ts => $measurements) {
+                $finaltsmap[$ts] = array();
+                foreach ($measurements as $k=>$vlist) {
+                    // strip the key we used for grouping
+                    array_push($finaltsmap[$ts], $vlist);
+                }
+            }
+            $tsmap = $finaltsmap;
         }
         ksort($tsmap);
         $res = [ [], [] ];
@@ -146,12 +186,13 @@ class InfluxV2Backend
     }
 
     private function parseReturnValue($responseJson, $finalresult,
-        $queriedStep) {
+        $queriedStep, $mergeStrat) {
         if (!array_key_exists("results", $responseJson)) {
             return $finalresult;
         }
         foreach($responseJson["results"] as $entityCode => $res) {
-            $raw_values = $this->mergeFrames($res["frames"], $entityCode);
+            $raw_values = $this->mergeFrames($res["frames"], $entityCode,
+                    $mergeStrat);
             if(count($raw_values)!=2){
                 continue;
             }
@@ -204,10 +245,11 @@ class InfluxV2Backend
      * @throws BackendException
      */
     public function queryInfluxV2(string $query, string $secret,
-        string $influxuri, array $finalres, int $step): array
+        string $influxuri, array $finalres, int $step,
+        string $mergeStrat): array
     {
         // send query and process response
         $res = $this->sendQuery($query, $secret, $influxuri);
-        return $this->parseReturnValue($res, $finalres, $step);
+        return $this->parseReturnValue($res, $finalres, $step, $mergeStrat);
     }
 }
