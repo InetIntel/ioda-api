@@ -468,7 +468,6 @@ END;
 from(bucket: "$bucket")
   |> range(start: v.timeRangeStart, stop:v.timeRangeStop)
   |> filter(fn: (r) =>
-    r._measurement != "yarrp_penultimate_as_freq" and
     r.target_as == "$entityCode"
     $qterm
   )
