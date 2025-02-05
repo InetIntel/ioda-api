@@ -77,6 +77,7 @@ use Symfony\Component\VarDumper\VarDumper;
 use App\TimeSeries\TimeSeries;
 use DateTime;
 
+
 class InfluxV2Backend
 {
 
@@ -117,6 +118,45 @@ class InfluxV2Backend
         curl_close($ch);
         return json_decode($output, true);
     }
+
+    private function upstreamDelayCompare($a, $b) {
+        $a_val = 0;
+        $b_val = 0;
+
+        if (!array_key_exists("agg_values", $a)) {
+            return 0;
+        }
+        if (!array_key_exists("agg_values", $b)) {
+            return 0;
+        }
+        if (array_key_exists("penultimate_as_count", $a["agg_values"]) &&
+                array_key_exists("penultimate_as_count", $b["agg_values"])) {
+            $a_val = $a["agg_values"]["penultimate_as_count"];
+            $b_val = $b["agg_values"]["penultimate_as_count"];
+        }
+
+        else if (array_key_exists("median_e2e_latency", $a["agg_values"]) &&
+                array_key_exists("median_e2e_latency", $b["agg_values"])) {
+            $a_val = $a["agg_values"]["median_e2e_latency"];
+            $b_val = $b["agg_values"]["median_e2e_latency"];
+        }
+
+        /* if we don't have penultimate_as_count or median_e2e_latency, then
+         * this is not what we were expecting?
+         */
+
+        if ($a_val == $b_val) {
+            return 0;
+        }
+        if ($a_val == null) {
+            return 1;
+        }
+        if ($b_val == null) {
+            return -1;
+        }
+        return ($a_val > $b_val) ? -1 : 1;
+    }
+
 
     private function mergeFrames($frames, $entityCode, $mergeStrat) {
         $tsmap = array();
@@ -168,6 +208,9 @@ class InfluxV2Backend
             $finaltsmap = array();
             foreach($tsmap as $ts => $measurements) {
                 $finaltsmap[$ts] = array();
+                // sort the results so that the penultimate ASes with
+                // the highest frequency appear first in the list
+                uasort($measurements, array($this, 'upstreamDelayCompare'));
                 foreach ($measurements as $k=>$vlist) {
                     // strip the key we used for grouping
                     array_push($finaltsmap[$ts], $vlist);
