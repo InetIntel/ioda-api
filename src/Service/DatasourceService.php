@@ -137,6 +137,20 @@ class DatasourceService
                 600,
                 "influxv2"
             ),
+            "upstream-delay-penult-asns" => new DatasourceEntity(
+                "upstream-delay-penult-asns",
+                "Upstream Delay Penultimate ASNs",
+                "Frequency",
+                "3600",
+                "influxv2"
+            ),
+            "upstream-delay-penult-e2e-latency" => new DatasourceEntity(
+                "upstream-delay-penult-e2e-latency",
+                "Upstream Delay Penultimate ASN End-to-End Latency",
+                "Milliseconds",
+                "3600",
+                "influxv2"
+            )
         ];
         $this->EVENTS_DATASOURCE =
             new DatasourceEntity(
@@ -183,6 +197,8 @@ class DatasourceService
             $ds = "gtr";
         } elseif (strpos($fqid,"ping-slash24")!==false){
             $ds = "ping-slash24";
+        } elseif (strpos($fqid,"yarrp")!==false){
+            $ds = "upstream-delay-e2e-latency";
         }
 
         return $ds;
