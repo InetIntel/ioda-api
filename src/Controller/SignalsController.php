@@ -148,7 +148,7 @@ class SignalsController extends ApiController
      *
      * <p>
      * The signals API retreives time-series data for a given entity using
-     * different data sources.  The data calcualtion is documented in the
+     * different data sources.  The data calculation is documented in the
      * datasources endpoint API.
      * </p>
      *
@@ -195,7 +195,7 @@ class SignalsController extends ApiController
      *     description="Filter signals by datasource",
      *     schema=@SWG\Schema(
      *     	type="string",
-     *          enum={"bgp", "ping-slash24", "merit-nt", "gtr", "gtr-norm"}
+     *          enum={"bgp", "ping-slash24", "merit-nt", "gtr", "gtr-norm", "upstream-delay-penult-asns", "upstream-delay-penult-e2e-latency"}
      *     ),
      *     required=false,
      * )

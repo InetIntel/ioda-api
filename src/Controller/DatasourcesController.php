@@ -97,8 +97,8 @@ class DatasourcesController extends ApiController
      * <h3>BGP (bgp)</h3>
      * <ul>
      *     <li>
-     *         Data is obtained by processing <em>all updates</em> from <em>all Route Views and
-     *         RIPE RIS collectors</em>.
+     *         Data is obtained by processing <em>all updates</em> from
+     *         <em>all Route Views and RIPE RIS collectors</em>.
      *     </li>
      *     <li>
      *         Every 5 minutes, we calculate the number of full-feed peers that
@@ -110,7 +110,7 @@ class DatasourcesController extends ApiController
      *     </li>
      * </ul>
      *
-     * <h3>Google Transparency Report (gtr)</h3>
+     * <h3>Google Transparency Report (gtr and gtr-norm)</h3>
      * <ul>
      *     <li>
      *         Data is obtained by processing data published by the <em>Google
@@ -138,8 +138,7 @@ class DatasourcesController extends ApiController
      *     </li>
      *     <li>
      *         Currently the alerts IODA shows use data from a team of
-     *         20 probers located at SDSC. (Alerts based on data from our
-     *         distributed probers that run on the Ark platform are coming soon.)
+     *         20 probers located at Georgia Tech.
      *     </li>
      *     <li>
      *         The trinocular measurement and inference technique labels a /24 block as <em>up</em>,
@@ -149,26 +148,31 @@ class DatasourcesController extends ApiController
      *     </li>
      * </ul>
      *
-     * <h3>Network Telescope (ucsd-nt and merit-nt)</h3>
+     * <h3>Network Telescope (merit-nt)</h3>
      * <ul>
      *     <li>
-     *         We analyze traffic data from both the <a href=https://www.caida.org/projects/network_telescope/>UCSD</a> and <a href=https://www.merit.edu/a-data-repository-for-cyber-security-research-and-education/>Merit</a> Network Telescopes.
-     *         (Currently IODA uses only data from the Merit Telescope for generating alerts.)
+     *         We analyze traffic data from the <a href=https://www.merit.edu/a-data-repository-for-cyber-security-research-and-education/>Merit</a> Network Telescope.
      *     </li>
      *     <li>
      *         We apply <a href=http://www.caida.org/publications/papers/2014/passive_ip_space_usage_estimation/>anti-spoofing heuristics and noise reduction filters</a> to the
      *         raw traffic.
      *     </li>
      *     <li>
-     *            For each packet that passes the filters, we perform geolocation (using the Netacuity IP geolocation DB) and ASN lookups on the source IP address,
+     *            For each packet that passes the filters, we perform geolocation (using the IPInfo IP geolocation DB) and ASN lookups on the source IP address,
      *            and then compute the <em>number of unique source IPs per minute</em>, aggregated by  country, region, and ASN.
      *     </li>
      * </ul>
      *
-     * <h3>Google Transparency Report (gtr and gtr-norm)</h3>
+     * <h3>Upstream Delay (upstream-delay-penult-asns and upstream-delay-penult-e2e-latency)</h3>
      * <ul>
      *     <li>
-     *          Data published by the Google Transparency Report team that provide a normalised indication of the amount of traffic observed for each of Google's public services (e.g. search, maps, drive, translate etc.) for a particular country.
+     *           We run traceroutes once every 30 minutes to a single (probably responsive) IP address from every routable /24 IPv4 prefix, using the <a href="https://www.cmand.org/yarrp/">Yarrp</a> methodology. 
+     *     </li>
+     *     <li>
+     *           Using those traceroutes, we record both the number of different penultimate ASNs observed prior to each subnet, as well as the distribution of end-to-end latencies seen for the traceroute probes that traversed each penultimate ASN to reach the target address.
+     *     </li>
+     *     <li>
+     *          We then aggregate these statistics by ASN to gain visibility into how the connectivity of an ASN might change in conjunction with an outage event.
      *     </li>
      * </ul>
      *
