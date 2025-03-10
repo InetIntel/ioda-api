@@ -250,11 +250,12 @@ END;
     }
 
     private function buildGTRBlendFluxQueries(array $entities, int $step,
-            int $datasource_id, string $field, string $code_field,
+            int $datasource_id, string $field, array $code_fields,
         string $measurement, string $bucket)
     {
         $fluxQueries = [];
 
+        $code_field = $code_fields[0];
 
         foreach($entities as $entity){
             $entityCode = $entity->getCode();
@@ -668,7 +669,6 @@ END;
                         $datasource_id, $field, $code_field, $measurement,
                         $bucket, $datasource, $extraParams);
             } else if ($datasource == "gtr-norm") {
-
                 $queries = $this->buildGTRBlendFluxQueries($entities, $step,
                         $datasource_id, $field, $code_field, $measurement,
                         $bucket);
