@@ -118,7 +118,8 @@ class SignalsService
 	    "ucsd-nt" => [ -1 ],
 	    "gtr" => [ -1 ],
 	    "gtr-norm" => [ -1 ],
-        "upstream-delay-penult-asns" => [ -1 ]
+        "upstream-delay-penult-asns" => [ -1 ],
+        "ping-slash24-latency" => [ -1 ]
     ];
 
     /**
@@ -417,6 +418,10 @@ class SignalsService
 
         } else if ($datasource == "upstream-delay-penult-e2e-latency") {
             $era_ds = "upstream-delay";
+            $mergeStrat = "append";
+        } else if ($datasource == "ping-slash24-loss" or
+                $datasource == "ping-slash24-latency") {
+            $era_ds = "ping-slash24-latency";
             $mergeStrat = "append";
         } else {
             $era_ds = $datasource;

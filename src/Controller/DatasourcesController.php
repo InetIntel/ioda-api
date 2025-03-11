@@ -128,7 +128,7 @@ class DatasourcesController extends ApiController
      *     </li>
      * </ul>
      *
-     * <h3>Active Probing (ping-slash24)</h3>
+     * <h3>Active Probing (ping-slash24, ping-slash24-latency, ping-slash24-loss)</h3>
      * <ul>
      *     <li>
      *         We use a custom implementation of the <a href="https://www.isi.edu/~johnh/PAPERS/Quan13c.html">Trinocular</a> technique.
@@ -144,7 +144,13 @@ class DatasourcesController extends ApiController
      *         The trinocular measurement and inference technique labels a /24 block as <em>up</em>,
      *         <em>down</em>, or <em>unknown</em>.
      *         In addition, we then aggregate <em>up</em> /24s into country, region and ASN
-     *         statistics.
+     *         statistics. The number of /24s that are designated as "up" form the basis of the ping-slash24 signal.
+     *     </li>
+     *     <li>
+     *         We also record the round trip time of successful probes and collate them to report the distribution of latencies to probe destinations in each country, region and ASN. This data is available as the "ping-slash24-latency" signal.
+     *     </li>
+     *     <li>
+     *         Similarly, we compare the number of probes sent to each ASN, country and region against the number of successful responses to determine the rate of packet loss for each entity. The loss rates can be queried using the "ping-slash24-loss" signal.
      *     </li>
      * </ul>
      *

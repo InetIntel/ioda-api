@@ -87,6 +87,7 @@ class DatasourceService
     public function __construct()
     {
         $this->RAW_DATA_DATASOURCES = [
+        /*
             "ucsd-nt" => new DatasourceEntity(
                 "ucsd-nt",
                 "UCSD Network Telescope",
@@ -94,6 +95,7 @@ class DatasourceService
                 60,
                 "influxv2"
             ),
+        */
             "gtr" => new DatasourceEntity(
                 "gtr",
                 "Google Transparency Report",
@@ -134,6 +136,20 @@ class DatasourceService
                 "ping-slash24",
                 "Active Probing",
                 "Up /24s",
+                600,
+                "influxv2"
+            ),
+            "ping-slash24-loss" => new DatasourceEntity(
+                "ping-slash24-loss",
+                "Active Probing Loss",
+                "Percentage of Probes Lost",
+                600,
+                "influxv2"
+            ),
+            "ping-slash24-latency" => new DatasourceEntity(
+                "ping-slash24-latency",
+                "Active Probing Latency",
+                "Milliseconds",
                 600,
                 "influxv2"
             ),
