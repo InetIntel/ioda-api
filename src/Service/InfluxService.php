@@ -99,6 +99,11 @@ class InfluxService
         "geoasn" => [],     // unused
     ];
 
+    const MAPPINGS = [
+        "ping-slash24-loss" => "|> map(fn:(r) => ({r with _value: if r[\"_field\"] == \"loss_pct\" then float(v: r._value) / 100.0 else float(v:r._value)}))",
+        "ping-slash24-latency" => "|> map(fn: (r) => ({r with _value: float(v: r._value) / 1000.0}))",
+    ];
+
     const FIELD_MAP = [
         "bgp" => [
             "continent" => [
@@ -189,6 +194,36 @@ class InfluxService
                 "measurement" => "yarrp_penultimate_as_freq",
             ],
             "extra" => "",
+        ],
+        "ping-slash24-loss" => [
+            "continent" => [
+                "measurement" => "geo_continent_latency",
+            ],
+            "country" => [
+                "measurement" => "geo_country_latency",
+            ],
+            "region" => [
+                "measurement" => "geo_region_latency",
+            ],
+            "asn" => [
+                "measurement" => "asn_latency",
+            ],
+            "extra" => " and (r._field == \"loss_pct\" or r._field == \"probe_count\")",
+        ],
+        "ping-slash24-latency" => [
+            "continent" => [
+                "measurement" => "geo_continent_latency",
+            ],
+            "country" => [
+                "measurement" => "geo_country_latency",
+            ],
+            "region" => [
+                "measurement" => "geo_region_latency",
+            ],
+            "asn" => [
+                "measurement" => "asn_latency",
+            ],
+            "extra" => " and (r._field != \"loss_pct\" and r._field != \"probe_count\")",
         ],
         "upstream-delay-penult-e2e-latency" => [
             "extra" => "",
@@ -381,10 +416,18 @@ END;
 
     private function buildGeoasnFluxQueries(array $entities, int $step,
             string $datasource, int $datasource_id, string $field,
-            string $bucket, string $qterm)
+            string $bucket, string $extra, string $qterm)
     {
         $fluxQueries = [];
 
+        if ($qterm !== "") {
+            $extra = $extra . " and " . $qterm;
+        }
+        if ($field !== "") {
+            $fieldClause = "r._field == \"$field\" and ";
+        } else {
+            $fieldClause = "";
+        }
         foreach($entities as $entity){
             $entityCode = $entity->getCode();
             $entityType = $entity->getType();
@@ -422,8 +465,9 @@ END;
                 |> range(start: v.timeRangeStart, stop:v.timeRangeStop)
                 |> filter(fn: (r) =>
                         r._measurement == "$measurement" and
-                        r._field == "$field" and
+                        $fieldClause
                         $codeclause
+                        $extra
                         )
                 |> aggregateWindow(every: ${step}s, fn: mean, timeSrc: "_start",
                         createEmpty: true)
@@ -549,13 +593,20 @@ END;
 
     private function buildStandardFluxQueries(array $entities, int $step,
         int $datasource_id, string $field, array $code_field,
-            string $measurement, string $bucket, string $extra, string $qterm)
+            string $measurement, string $bucket, string $extra, string $qterm,
+            string $mapping)
     {
 
         $fluxQueries = [];
 
         if ($qterm !== "") {
             $extra = $extra . " and " . $qterm;
+        }
+
+        if ($field !== "") {
+            $fieldClause = "r._field == \"$field\" and ";
+        } else {
+            $fieldClause = "";
         }
 
         foreach($entities as $entity){
@@ -586,10 +637,11 @@ from(bucket: "$bucket")
   |> range(start: v.timeRangeStart, stop:v.timeRangeStop)
   |> filter(fn: (r) =>
     r._measurement == "$measurement" and
-    r._field == "$field" and
+    $fieldClause
     $codeclause
     $extra
   )
+  $mapping
   |> aggregateWindow(every: ${step}s, fn: mean, timeSrc: "_start",
     createEmpty: true)
   |> yield(name: "mean")
@@ -646,6 +698,11 @@ END;
         $bucket = $era->getBucket();
         $queryterm = $era->getQueryTerm();
         $extra = self::FIELD_MAP[$datasource]["extra"];
+        if (array_key_exists($datasource, self::MAPPINGS)) {
+            $mapping = self::MAPPINGS[$datasource];
+        } else {
+            $mapping = "";
+        }
         $datasource_id = $era->getGrafanaSource();
 
         if ($datasource == "upstream-delay-penult-e2e-latency") {
@@ -657,7 +714,8 @@ END;
                     $entities, $step, $datasource_id, $bucket, $queryterm);
         } else if ($entityType == "geoasn") {
             $queries = $this->buildGeoasnFluxQueries($entities, $step,
-                    $datasource, $datasource_id, $field, $bucket, $queryterm);
+                    $datasource, $datasource_id, $field, $bucket, $extra,
+                    $queryterm);
         } else {
             $code_field = self::CODE_FIELDS["$entityType"];
             $measurement = self::FIELD_MAP[$datasource]["$entityType"]["measurement"];
@@ -675,7 +733,7 @@ END;
             } else {
                 $queries = $this->buildStandardFluxQueries($entities, $step,
                     $datasource_id, $field, $code_field, $measurement,
-                    $bucket, $extra, $queryterm);
+                    $bucket, $extra, $queryterm, $mapping);
             }
         }
 
