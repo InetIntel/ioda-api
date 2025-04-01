@@ -130,6 +130,12 @@ class SignalsController extends ApiController
             );
         }
 
+        if ($until->getEpochTime() - $from->getEpochTime() >
+                100 * 24 * 60 * 60) {
+            throw new InvalidArgumentException(
+                    "Time range for a single query must be less than 100 days");
+        }
+
         if ($datasource && !$this->datasourceService->isValidDatasource($datasource)){
             throw new InvalidArgumentException(
                 sprintf("invalid datasource %s (must be one of the following [%s])", $datasource, join(", ", $this->datasourceService->getDatasourceNames()))
