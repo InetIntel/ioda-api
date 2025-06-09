@@ -181,13 +181,19 @@ class InfluxService
             "country" => [
                 "measurement" => "google_tr",
             ],
-            "extra" => " and r.product == \"WEB_SEARCH\"",
+            "extra" => "",
+        ],
+        "gtr-sarima" => [
+            "country" => [
+                "measurement" => "google_tr_sarima",
+            ],
+            "extra" => "",
         ],
         "gtr-norm" => [
             "country" => [
                 "measurement" => "google_tr",
             ],
-            "extra" => " and r.product == \"WEB_SEARCH\"",
+            "extra" => "",
         ],
         "upstream-delay-penult-asns" => [
             "asn" => [
@@ -325,12 +331,18 @@ END;
         string $code_field, string $measurement, string $bucket,
         string $prod) {
 
+        if ($field == "") {
+            $field_clause = "";
+        } else {
+            $field_clause = "r._field == \"{$field}\" and";
+        }
+
         $q = <<< END
 from(bucket: "$bucket")
   |> range(start: v.timeRangeStart, stop:v.timeRangeStop)
   |> filter(fn: (r) =>
     r._measurement == "$measurement" and
-    r._field == "$field" and
+    $field_clause
     r.$code_field == "$entityCode" and
     r.product == "$prod"
   )
@@ -372,13 +384,14 @@ END;
                 $ent_index = $entityCode . "|->" . $prod;
 
                 if ($prod == "BLENDED") {
-                    if ($datasource == "gtr") {
+                    if ($datasource != "gtr-norm") {
                         continue;
                     }
                     $q = $this->buildGTRBlendFluxSingleQuery($entityCode,
                             $step, $field, $code_field, $measurement,
                             $bucket);
-                } else if ($datasource == "gtr") {
+                } else if ($datasource == "gtr" ||
+                        $datasource == "gtr-sarima") {
                     $q = $this->buildGTRRawFluxSingleQuery($entityCode,
                             $step, $field, $code_field, $measurement,
                             $bucket, $prod);
@@ -720,8 +733,8 @@ END;
             $code_field = self::CODE_FIELDS["$entityType"];
             $measurement = self::FIELD_MAP[$datasource]["$entityType"]["measurement"];
 
-            if ($datasource == "gtr" or ($datasource == "gtr-norm"
-                                && $extraParams != null)) {
+            if ($datasource == "gtr" or $datasource == "gtr-sarima" or
+                    ($datasource == "gtr-norm" && $extraParams != null)) {
 
                 $queries = $this->buildGTRFluxQueries($entities, $step,
                         $datasource_id, $field, $code_field, $measurement,

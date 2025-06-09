@@ -110,7 +110,7 @@ class DatasourcesController extends ApiController
      *     </li>
      * </ul>
      *
-     * <h3>Google Transparency Report (gtr and gtr-norm)</h3>
+     * <h3>Google Transparency Report (gtr, gtr-sarima and gtr-norm)</h3>
      * <ul>
      *     <li>
      *         Data is obtained by processing data published by the <em>Google
@@ -240,7 +240,7 @@ class DatasourcesController extends ApiController
      * @SWG\Parameter(
      *     name="datasource",
      *     in="path",
-     *     description="Shortname of the data source: bgp, ucsd-nt, merit-nt, gtr, gtr-norm, ping-slash24",
+     *     description="Shortname of the data source: bgp, ucsd-nt, merit-nt, gtr, gtr-norm, gtr-sarima, ping-slash24",
      * )
      * @SWG\Response(
      *     response=200,

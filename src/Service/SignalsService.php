@@ -118,6 +118,7 @@ class SignalsService
 	    "ucsd-nt" => [ -1 ],
 	    "gtr" => [ -1 ],
 	    "gtr-norm" => [ -1 ],
+	    "gtr-sarima" => [ -1 ],
         "upstream-delay-penult-asns" => [ -1 ],
         "ping-slash24-latency" => [ -1 ]
     ];
@@ -232,6 +233,7 @@ class SignalsService
                 "ucsd-nt" => "aliasByNode(darknet.ucsd-nt.non-erratic.$fqid_combined.uniq_src_ip, $aliasIndexNt[$entityType])",
                 "merit-nt" => "aliasByNode(darknet.merit-nt.non-erratic.$fqid_combined.uniq_src_ip, $aliasIndexNt[$entityType])",
                 "gtr" => "aliasByNode(google_tr.$fqid_combined.traffic, $aliasIndex[$entityType])",
+                "gtr-sarima" => "aliasByNode(google_tr_sarima.$fqid_combined.traffic, $aliasIndex[$entityType])",
                 "gtr-norm" => "aliasByNode(google_tr.$fqid_combined.traffic, $aliasIndex[$entityType])",
                 // NOTE: if see strange gaps in between bins, consider bring back keepLastValue function for ping-slash24
                 "ping-slash24" => "aliasByNode(groupByNode(active.ping-slash24.$fqid_combined.probers.team-1.caida-sdsc.*.up_slash24_cnt,$aliasIndex[$entityType], 'sumSeries'), $aliasIndex[$entityType])",
@@ -418,6 +420,9 @@ class SignalsService
 
         } else if ($datasource == "upstream-delay-penult-e2e-latency") {
             $era_ds = "upstream-delay";
+            $mergeStrat = "append";
+        } else if ($datasource == "gtr-sarima") {
+            $era_ds = "gtr-sarima";
             $mergeStrat = "append";
         } else if ($datasource == "ping-slash24-loss" or
                 $datasource == "ping-slash24-latency") {

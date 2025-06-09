@@ -103,6 +103,13 @@ class DatasourceService
                 1800,
                 "influxv2"
             ),
+            "gtr-sarima" => new DatasourceEntity(
+                "gtr-sarima",
+                "Google Transparency Report (Forecasted)",
+                "Traffic",
+                1800,
+                "influxv2"
+            ),
             "gtr-norm" => new DatasourceEntity(
                 "gtr-norm",
                 "Google Transparency Report (Normalized)",
