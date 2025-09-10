@@ -201,7 +201,7 @@ class SignalsController extends ApiController
      *     description="Filter signals by datasource",
      *     schema=@SWG\Schema(
      *     	type="string",
-     *          enum={"bgp", "ping-slash24", "merit-nt", "gtr", "gtr-norm", "gtr-sarima", "upstream-delay-penult-asns", "upstream-delay-penult-e2e-latency", "ping-slash24-latency", "ping-slash24-loss"}
+     *          enum={"bgp", "ping-slash24", "merit-nt", "gtr", "gtr-norm", "gtr-sarima", "mozilla", "upstream-delay-penult-asns", "upstream-delay-penult-e2e-latency", "ping-slash24-latency", "ping-slash24-loss"}
      *     ),
      *     required=false,
      * )

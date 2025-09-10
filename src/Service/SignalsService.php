@@ -119,6 +119,7 @@ class SignalsService
 	    "gtr" => [ -1 ],
 	    "gtr-norm" => [ -1 ],
 	    "gtr-sarima" => [ -1 ],
+	    "mozilla" => [ -1 ],
         "upstream-delay-penult-asns" => [ -1 ],
         "ping-slash24-latency" => [ -1 ]
     ];
@@ -427,6 +428,9 @@ class SignalsService
         } else if ($datasource == "ping-slash24-loss" or
                 $datasource == "ping-slash24-latency") {
             $era_ds = "ping-slash24-latency";
+            $mergeStrat = "append";
+        } else if ($datasource == "mozilla") {
+            $era_ds = "mozilla";
             $mergeStrat = "append";
         } else {
             $era_ds = $datasource;

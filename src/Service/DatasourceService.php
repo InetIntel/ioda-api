@@ -173,6 +173,13 @@ class DatasourceService
                 "Milliseconds",
                 "3600",
                 "influxv2"
+            ),
+            "mozilla" => new DatasourceEntity(
+                "mozilla",
+                "Mozilla Telemetry",
+                "Percentage",
+                3600,
+                "influxv2"
             )
         ];
         $this->EVENTS_DATASOURCE =

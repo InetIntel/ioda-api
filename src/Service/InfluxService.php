@@ -195,6 +195,15 @@ class InfluxService
             ],
             "extra" => "",
         ],
+        "mozilla" => [
+            "country" => [
+                "measurement" => "mozilla_tlm",
+            ],
+            "region" => [
+                "measurement" => "mozilla_tlm",
+            ],
+            "extra" => "",
+        ],
         "upstream-delay-penult-asns" => [
             "asn" => [
                 "measurement" => "yarrp_penultimate_as_freq",
