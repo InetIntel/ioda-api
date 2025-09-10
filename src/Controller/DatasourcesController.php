@@ -169,6 +169,14 @@ class DatasourcesController extends ApiController
      *     </li>
      * </ul>
      *
+     * <h3>Mozilla Telemetry (mozilla)</h3>
+     * <ul>
+     *   <li> Data for these signals are provided by Mozilla and are derived from telemetry data that they collect from their software products (e.g. Firefox).
+     *   </li>
+     *   <li> The geolocation for these signals is performed by Mozilla themselves, and then we fetch the geo-located data points and map them into our own IODA regions. Most notably, Mozilla's data is broken down at the city and country level, so we need to map individual cities to their corresponding IODA region.
+     *   </li>
+     * </ul>
+     *
      * <h3>Upstream Delay (upstream-delay-penult-asns and upstream-delay-penult-e2e-latency)</h3>
      * <ul>
      *     <li>
@@ -240,7 +248,7 @@ class DatasourcesController extends ApiController
      * @SWG\Parameter(
      *     name="datasource",
      *     in="path",
-     *     description="Shortname of the data source: bgp, ucsd-nt, merit-nt, gtr, gtr-norm, gtr-sarima, ping-slash24",
+     *     description="Shortname of the data source: bgp, ucsd-nt, merit-nt, gtr, gtr-norm, gtr-sarima, ping-slash24, mozilla",
      * )
      * @SWG\Response(
      *     response=200,
