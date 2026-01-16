@@ -60,7 +60,8 @@ class OutagesAlertsRepository extends ServiceEntityRepository
     public function findAlerts(
         $from, $until,
         ?string $entityType, ?string $entityCode, ?string $datasource=null,
-        ?string $relatedType=null, ?string $relatedCode=null)
+        ?string $relatedType=null, ?string $relatedCode=null,
+        ?int $extwindow=0)
     {
         $qb = $this->createQueryBuilder('a');
         $qb->orderBy('a.time', 'ASC');
@@ -69,10 +70,12 @@ class OutagesAlertsRepository extends ServiceEntityRepository
         #$qb->andWhere('a.method != \'sarima\'');
 
         if ($from) {
-            $qb->andWhere('a.time >= :from')->setParameter('from', $from);
+            $qb->andWhere('a.time >= :from')->setParameter('from',
+                (int)$from - $extwindow);
         }
         if ($until) {
-            $qb->andWhere('a.time <= :until')->setParameter('until', $until);
+            $qb->andWhere('a.time <= :until')->setParameter('until',
+                (int)$until + $extwindow);
         }
         if ($datasource){
             $qb->andWhere('a.fqid LIKE :datasource')->setParameter('datasource', "%".$datasource."%");

@@ -387,11 +387,16 @@ class OutagesEventsService
                 $cE['score'] += $cE['prevDrop'] * $interAlertMins;
                 $cE['prevTime'] = $time;
                 $cE['prevDrop'] = $drop;
-		$cE['alerts'][] = $a;
-		$cE['method'] = $method;
-		$cE['datasource'] = $source;
+                $cE['alerts'][] = $a;
+                $cE['method'] = $method;
+                $cE['datasource'] = $source;
 
                 if ($level === "normal") {
+                    if ($time < $from) {
+                        $curEvents[$aId] = null;
+                        continue;
+                    }
+
                     $cE['until'] = $time;
                     unset($cE['prevTime']);
                     unset($cE['prevDrop']);
@@ -402,16 +407,16 @@ class OutagesEventsService
                 // this is the first alert for this event
                 if ($level == "normal") {
                     // we can't do anything with a normal-only event
-                } else {
+                } else if ($time <= $until) {
                     $curEvents[$aId] = [
                         'fqid' => $fqid,
                         'metaType' => $a->getMetaType(),
                         'metaCode' => $a->getMetaCode(),
                         'from' => $time,
-			'alerts' => [$a],
-			'method' => $method,
-			'datasource' => $source,
-                        'X-Overlaps-Window' => false,
+                        'alerts' => [$a],
+                        'method' => $method,
+                        'datasource' => $source,
+                        'X-Overlaps-Window' => ($time < $from),
                         // until will be set at end
                         'score' => 0,
 
