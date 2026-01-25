@@ -112,7 +112,6 @@ class OutagesBackend
         $values = [];
         $cur_event_index = 0;
         $cur_time = $from;
-
         // loop through all steps in the range
         while(true){
 
@@ -184,7 +183,7 @@ class OutagesBackend
     {
 
         // build events
-        $alerts = $this->alertsService->findAlerts($from, $until, $entityType, $entityCode, null, false, null, null, null);
+        $alerts = $this->alertsService->findAlerts($from, $until, $entityType, $entityCode, null, null, 0, null, null, null, 2592000);
         $events = $this->eventsService->buildEventsObjects($alerts, false, "ioda", $from, $until, null, false, null, "time", "asc");
         $eventsGroups = $this->eventsService->groupEventsByEntity($events);
 

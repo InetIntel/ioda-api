@@ -148,15 +148,18 @@ class OutagesAlertsService
      * @param null $relatedCode
      * @param null $ignoreMethods
      * @param null $ignoreSources
+     * @param int $extendWindow
      * @return OutagesAlert[]
      */
-    public function findAlerts($from, $until, $entityType, $entityCode, $datasource, $limit=null, $page=0,
-                               $relatedType=null, $relatedCode=null, $ignoreMethods=null)
+    public function findAlerts($from, $until, $entityType, $entityCode,
+            $datasource, $limit=null, $page=0,
+            $relatedType=null, $relatedCode=null, $ignoreMethods=null,
+            $extendWindow=0
+            )
     {
         // find alerts, already sorted by time
 
         $alerts = [];
-
         if($relatedType!=null){
             $entities = $this->metadataService->search($entityType, $entityCode, null, null, $page, false, $relatedType, $relatedCode);
             $codes = [];
@@ -165,7 +168,7 @@ class OutagesAlertsService
             }
             $code_chunks = array_chunk($codes, 1000, true);
             foreach($code_chunks as $code_chunk) {
-		$alerts = array_merge($alerts, $this->repo->findAlerts($from, $until, $entityType, implode(",", $code_chunk), $datasource, null, null));
+		$alerts = array_merge($alerts, $this->repo->findAlerts($from, $until, $entityType, implode(",", $code_chunk), $datasource, null, null, $extendWindow));
                 $alerts = $this->filterIgnoredAlerts($alerts, $ignoreMethods);
                 $alerts = $this->squashAlerts($alerts);
                 if($limit && count($alerts)>$limit){
@@ -173,7 +176,7 @@ class OutagesAlertsService
                 }
             }
         } else {
-            $alerts = $this->repo->findAlerts($from, $until, $entityType, $entityCode, $datasource, $relatedType, $relatedCode);
+            $alerts = $this->repo->findAlerts($from, $until, $entityType, $entityCode, $datasource, $relatedType, $relatedCode, $extendWindow);
             $alerts = $this->filterIgnoredAlerts($alerts, $ignoreMethods);
             // squash alerts
             $alerts = $this->squashAlerts($alerts);
