@@ -629,7 +629,7 @@ class OutagesController extends ApiController
      * @SWG\Parameter(
      *     name="extendWindow",
      *     in="query",
-     *     description="Set the maximum range of time (in seconds) outside of 'from' and 'until' to search for alerts that started or ended outside of the specified time range but were active during that time period. Defaults to 2592000 seconds (i.e. 30 days).",
+     *     description="Set the maximum range of time (in seconds) outside of 'from' and 'until' to search for alerts that started or ended outside of the specified time range but were active during that time period. Defaults to 1209600 seconds (i.e. 14 days).",
      *     required=false,
      * )
      * @SWG\Response(
@@ -732,7 +732,7 @@ class OutagesController extends ApiController
                 new RequestParameter('orderBy', RequestParameter::STRING, null, false),
                 new RequestParameter('overall', RequestParameter::BOOL, false, false),
                 new RequestParameter('ignoreMethods', RequestParameter::STRING, null, false),
-                new RequestParameter('extendWindow', RequestParameter::INTEGER, 2592000, false),
+                new RequestParameter('extendWindow', RequestParameter::INTEGER, 1209600, false),
             ],
             $request
         );
@@ -857,7 +857,7 @@ class OutagesController extends ApiController
      * @SWG\Parameter(
      *     name="extendWindow",
      *     in="query",
-     *     description="Set the maximum range of time (in seconds) outside of 'from' and 'until' to search for alerts that started or ended outside of the specified time range but were active during that time period. Defaults to 2592000 seconds (i.e. 30 days).",
+     *     description="Set the maximum range of time (in seconds) outside of 'from' and 'until' to search for alerts that started or ended outside of the specified time range but were active during that time period. Defaults to 1209600 seconds (i.e. 14 days).",
      *     required=false,
      * )
      * @SWG\Response(
@@ -939,7 +939,7 @@ class OutagesController extends ApiController
                 new RequestParameter('entityCode', RequestParameter::STRING, null, false),
                 new RequestParameter('orderBy', RequestParameter::STRING, null, false),
                 new RequestParameter('ignoreMethods', RequestParameter::STRING, null, false),
-                new RequestParameter('extendWindow', RequestParameter::INTEGER, 2592000, false),
+                new RequestParameter('extendWindow', RequestParameter::INTEGER, 1209600, false),
                 ],
                 $request
                 );

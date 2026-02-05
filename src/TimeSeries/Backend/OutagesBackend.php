@@ -183,7 +183,7 @@ class OutagesBackend
     {
 
         // build events
-        $alerts = $this->alertsService->findAlerts($from, $until, $entityType, $entityCode, null, null, 0, null, null, null, 2592000);
+        $alerts = $this->alertsService->findAlerts($from, $until, $entityType, $entityCode, null, null, 0, null, null, null, 1209600);
         $events = $this->eventsService->buildEventsObjects($alerts, false, "ioda", $from, $until, null, false, null, "time", "asc");
         $eventsGroups = $this->eventsService->groupEventsByEntity($events);
 
