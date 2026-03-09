@@ -705,8 +705,21 @@ END;
      */
     public function buildFluxQuery(string $datasource, array $entities, QueryTime $from, QueryTime $until, int $step, DataEraEntity $era, ?string $extraParams)
     {
-        $from_ts = $from->getEpochTime()*1000;
-        $until_ts = $until->getEpochTime()*1000;
+
+        $from_raw = (int)$from->getEpochTime();
+        $until_raw = (int)$until->getEpochTime();
+
+        // Helper to normalize to seconds regardless of input unit
+        $normalize = function($ts) {
+            $digits = strlen((string)$ts);
+
+            if ($digits >= 16) return (int)($ts / 1000000); // Microseconds
+            if ($digits >= 13) return (int)($ts / 1000);    // Milliseconds
+            return $ts;                                     // Seconds
+        };
+
+        $from_ts = $normalize($from_raw) * 1000;
+        $until_ts = $normalize($until_raw) * 1000;
 
         $query = <<<END
 {
