@@ -275,25 +275,31 @@ END;
 
         $q = <<< END
 allfetched = from(bucket: "ioda_gtr")
-|> range(start: v.timeRangeStart, stop:v.timeRangeStop)
-|> filter(fn: (r) =>
-        r._measurement == "$measurement" and
-        r._field == "$field" and
-        r.$code_field == "$entityCode" and
-        (r.product == "WEB_SEARCH" or r.product == "GMAIL" or r.product == "MAPS")
-        )
+  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+  |> filter(fn: (r) => r._measurement == "$measurement" and r._field == "$field" and r.$code_field == "$entityCode")
+  |> filter(fn: (r) => r.product == "WEB_SEARCH" or r.product == "GMAIL" or r.product == "MAPS")
 
-maxweb = allfetched |> filter(fn: (r) => r.product == "WEB_SEARCH") |> max() |> findColumn(fn: (key) => true, column: "_value")
-maxmail = allfetched |> filter(fn: (r) => r.product == "GMAIL") |> max() |> findColumn(fn: (key) => true, column: "_value")
-maxmaps = allfetched |> filter(fn: (r) => r.product == "MAPS") |> max() |> findColumn(fn: (key) => true, column: "_value")
+get_m = (p) => {
+    extract = allfetched |> filter(fn: (r) => r.product == p) |> max() |> findColumn(fn: (key) => true, column: "_value")
+    return if length(arr: extract) > 0 then extract[0] else 1.0
+}
+
+m_web = get_m(p: "WEB_SEARCH")
+m_mail = get_m(p: "GMAIL")
+m_maps = get_m(p: "MAPS")
 
 allfetched
-|> pivot(rowKey: ["_time"], columnKey: ["product"], valueColumn: "_value")
-|> map(fn: (r) => ({r with MAPS: r.MAPS / maxmaps[0]}))
-|> map(fn: (r) => ({r with GMAIL: r.GMAIL / maxmail[0]}))
-|> map(fn: (r) => ({r with WEB_SEARCH: r.WEB_SEARCH / maxweb[0]}))
-|> map(fn: (r) => ({r with _value: (r.MAPS + r.GMAIL + r.WEB_SEARCH) / 3.0}))
-|> drop(columns: ["MAPS", "GMAIL", "WEB_SEARCH"])
+  |> pivot(rowKey: ["_time"], columnKey: ["product"], valueColumn: "_value")
+  |> map(fn: (r) => {
+      web = if exists r.WEB_SEARCH then r.WEB_SEARCH else 0.0
+      mail = if exists r.GMAIL then r.GMAIL else 0.0
+      maps = if exists r.MAPS then r.MAPS else 0.0
+
+      norm_val = ( (web / m_web) + (mail / m_mail) + (maps / m_maps) ) / 3.0
+      return { r with _value: norm_val }
+  })
+  |> drop(columns: ["MAPS", "GMAIL", "WEB_SEARCH"])
+  |> yield(name: "normalized_average")
 END;
 
         return $q;
