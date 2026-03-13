@@ -63,18 +63,20 @@ class OutagesEvent
         $this->overlap = $overlap;
 	$this->datasource = "unknown";
 	$this->method = "unknown";
-	foreach ($alerts as $al) {
-	    if ($this->method === "unknown") {
-		$this->method = $al->getMethod();
-	    } else if ($this->method !== $al->getMethod()) {
-		$this->method = "multiple";
-	    }
-
-	    if ($this->datasource === "unknown") {
-		$this->datasource = $al->getDatasource();
-	    } else if ($this->datasource !== $al->getDatasource()) {
-		$this->datasource = "overall";
-	    }
+	if (!empty($alerts)) {
+		foreach ($alerts as $al) {
+		    if ($this->method === "unknown") {
+			$this->method = $al->getMethod();
+		    } else if ($this->method !== $al->getMethod()) {
+			$this->method = "multiple";
+		    }
+	
+		    if ($this->datasource === "unknown") {
+			$this->datasource = $al->getDatasource();
+		    } else if ($this->datasource !== $al->getDatasource()) {
+			$this->datasource = "overall";
+		    }
+		}
 	}
     }
 

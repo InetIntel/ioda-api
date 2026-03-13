@@ -72,7 +72,7 @@ class OutagesEventsService
      * @param $eventMap
      * @return array
      */
-    private function mergeOverlappingEvents($eventMap, $meritCutoff): array
+    private function mergeOverlappingEvents($eventMap, $meritCutoff, bool $includeAlerts = true): array
     {
         if (!count($eventMap)) {
             return [];
@@ -128,7 +128,9 @@ class OutagesEventsService
                     $lastEvent['fqScores'][$eFqid] = $event['fqScores'][$eFqid];
                 }
 
-                $lastEvent['alerts'] = array_merge($lastEvent['alerts'], $event["alerts"]);
+                if ($includeAlerts) {
+                    $lastEvent['alerts'] = array_merge($lastEvent['alerts'], $event["alerts"]);
+                }
 
                 $lastEvent['sources'][$event['source']] = true;
                 // put back the popped last merged event
@@ -214,9 +216,9 @@ class OutagesEventsService
 
         $alertGroups = $this->groupAlertsByEntity($alerts);
         foreach($alertGroups as $entity_id => $alerts) {
-            $eventMap = $this->buildEvents($alerts, $from, $until);
+            $eventMap = $this->buildEvents($alerts, $from, $until, $includeAlerts);
             if ($mergeOverlap) {
-                $raw_events = array_merge($raw_events, $this->mergeOverlappingEvents($eventMap));
+                $raw_events = array_merge($raw_events, $this->mergeOverlappingEvents($eventMap, 0, $includeAlerts));
             } else {
                 foreach ($eventMap as $id => $events) {
                     // id = datasource + entity_type + entity_code
@@ -273,7 +275,7 @@ class OutagesEventsService
      *
      * @return array
      */
-    private function computeSummaryScores(array &$events, int $meritCutoff): array
+    private function computeSummaryScores(array &$events, int $meritCutoff, bool $includeAlerts = true): array
     {
         $res = [];
         foreach (array_keys($events) as $aId) {
@@ -287,7 +289,7 @@ class OutagesEventsService
             }
         }
 
-        $merged = $this->mergeOverlappingEvents($events, $meritCutoff);
+        $merged = $this->mergeOverlappingEvents($events, $meritCutoff, $includeAlerts);
         $total = 0;
         foreach ($merged as $event) {
             $total += $event['score'];
@@ -330,12 +332,13 @@ class OutagesEventsService
         $alertGroups = $this->groupAlertsByEntity($alerts);
         foreach($alertGroups as $entity_id => $alerts){
             // all alerts here have the entity
-            $eventmap = $this->buildEvents($alerts, $from, $until);
+            $eventmap = $this->buildEvents($alerts, $from, $until, false);
             if(!$eventmap){
                 continue;
             }
-            $scores = $this->computeSummaryScores($eventmap, $meritCutoff);
+            $scores = $this->computeSummaryScores($eventmap, $meritCutoff, false);
             $res[] = new OutagesSummary($scores, $alerts[0]->getEntity(), $this->countEventsFromMap($eventmap));
+            unset($alerts);
         }
 
         if($orderByAttr=="score"){
@@ -362,7 +365,7 @@ class OutagesEventsService
         return $res;
     }
 
-    private function buildEvents($alerts, $from, $until, $orderBy="score"){
+    private function buildEvents($alerts, $from, $until, bool $includeAlerts = true, $orderBy="score"){
         // sort alerts by time
         // usort($alerts, ["App\Outages\OutagesEventsService","cmpAlert"]);
 
@@ -400,14 +403,16 @@ class OutagesEventsService
                 $cE['score'] += $cE['prevDrop'] * $interAlertMins;
                 $cE['prevTime'] = $time;
                 $cE['prevDrop'] = $drop;
-                $cE['alerts'][] = $a;
+                if ($includeAlerts) {
+                    $cE['alerts'][] = $a;
+                }
                 $cE['method'] = $method;
                 $cE['datasource'] = $source;
 
                 if ($level === "normal") {
                     if ($time >= $from) {
                         $cE['until'] = $time;
-                        $this->finalizeEvent($events, $aId, $cE);
+                        $this->finalizeEvent($events, $aId, $cE, $includeAlerts);
                     }
                     $curEvents[$aId] = null;
                 }
@@ -420,7 +425,7 @@ class OutagesEventsService
                         'metaType' => $a->getMetaType(),
                         'metaCode' => $a->getMetaCode(),
                         'from' => $time,
-                        'alerts' => [$a],
+                        'alerts' => $includeAlerts ? [$a] : [],
                         'method' => $method,
                         'source' => $a->getDatasource(),
                         'X-Overlaps-Window' => ($time < $from),
@@ -443,7 +448,7 @@ class OutagesEventsService
                 $cE['score'] += $cE['prevDrop'] * $interAlertMins;
                 $cE['until'] = $until;
                 $cE['X-Overlaps-Window'] = true;
-                $this->finalizeEvent($events, $aId, $cE);
+                $this->finalizeEvent($events, $aId, $cE, $includeAlerts);
             }
         }
 
@@ -451,7 +456,7 @@ class OutagesEventsService
         return array_filter($events);
     }
 
-    private function finalizeEvent(&$events, $aId, $cE) {
+    private function finalizeEvent(&$events, $aId, $cE, bool $includeAlerts = true) {
         unset($cE['prevTime'], $cE['prevDrop']);
         $events[$aId][] = $cE;
     }
