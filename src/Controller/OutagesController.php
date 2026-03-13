@@ -965,8 +965,8 @@ class OutagesController extends ApiController
         }
 
         $alerts = $alertsService->findAlertsStream($from, $until, $entityType,
-                        $entityCode, null, null, null, $relatedTo[0], $relatedTo[1],
-                        $ignoreMethods, $extendWindow, true);
+                $entityCode, null, null, null, $relatedTo[0], $relatedTo[1],
+                $ignoreMethods, $extendWindow, true);
         $summaries = $eventsService->buildEventsSummary($alerts, $from, $until, $limit, $page, $orderBy[0], $orderBy[1]);
 
         $env->setData($summaries);

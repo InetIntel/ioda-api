@@ -39,6 +39,7 @@ namespace App\Service;
 use App\Entity\OutagesEvent;
 use App\Entity\OutagesSummary;
 use App\Repository\OutagesAlertsRepository;
+use Doctrine\ORM\EntityManagerInterface;
 
 class OutagesEventsService
 {
@@ -52,10 +53,16 @@ class OutagesEventsService
      */
     private $datasourceService;
 
-    public function __construct(OutagesAlertsRepository $outagesAlertsRepository, DatasourceService $datasourceService)
+    /**
+     * @var EntityManagerInterface
+     */
+    private $entityManager;
+
+    public function __construct(OutagesAlertsRepository $outagesAlertsRepository, DatasourceService $datasourceService, EntityManagerInterface $entityManager)
     {
         $this->repo = $outagesAlertsRepository;
         $this->datasourceService = $datasourceService;
+        $this->entityManager = $entityManager;
     }
 
     private function cmpEvent($a, $b) {
@@ -319,50 +326,64 @@ class OutagesEventsService
      * @param string|null $orderByOrder
      * @return OutagesEvent[]
      */
-    public function buildEventsSummary($alerts, $from, $until, $limit, $page=0, $orderByAttr="score", $orderByOrder="asc"): array
-    {
+    public function buildEventsSummary(iterable $alerts, $from, $until, $limit, $page=0, $orderByAttr="score", $orderByOrder="asc"): array {
         $meritCutoff = $from - (3 * 24 * 60 * 60);
-        if($orderByAttr=="time"){
-            $orderByAttr="score";
-        }
         $res = [];
+        $currentEntityAlerts = [];
+        $currentEntityKey = null;
 
-        // first group all alerts by entity and process each entity's alerts
-        // separately to build events and then summary
-        $alertGroups = $this->groupAlertsByEntity($alerts);
-        foreach($alertGroups as $entity_id => $alerts){
-            // all alerts here have the entity
-            $eventmap = $this->buildEvents($alerts, $from, $until, false);
-            if(!$eventmap){
-                continue;
+        foreach ($alerts as $al) {
+            $entityKey = $al->getMetaType() . ":" . $al->getMetaCode();
+
+            if ($currentEntityKey !== null && $currentEntityKey !== $entityKey) {
+                // Process previous entity
+                $res[] = $this->processEntitySummary($currentEntityAlerts, $from, $until, $meritCutoff);
+                $currentEntityAlerts = [];
             }
-            $scores = $this->computeSummaryScores($eventmap, $meritCutoff, false);
-            $res[] = new OutagesSummary($scores, $alerts[0]->getEntity(), $this->countEventsFromMap($eventmap));
-            unset($alerts);
+
+            $currentEntityKey = $entityKey;
+            $currentEntityAlerts[] = $al;
         }
 
-        if($orderByAttr=="score"){
+        // Process last entity
+        if (!empty($currentEntityAlerts)) {
+            $res[] = $this->processEntitySummary($currentEntityAlerts, $from, $until, $meritCutoff);
+        }
+
+        if ($orderByAttr == "score") {
             usort($res,
                 function ($a, $b) {
-                    return ($a->getScores()["overall"] > $b->getScores()["overall"] );
+                    return ($a->getScores()["overall"] > $b->getScores()["overall"]);
                 }
             );
-        } else if ($orderByAttr=="name") {
+        } else if ($orderByAttr == "name") {
             usort($res,
                 function ($a, $b) {
-                    return strcmp($a->getEntity()->getName(), $b->getEntity()->getName() );
+                    return strcmp($a->getEntity()->getName(), $b->getEntity()->getName());
                 }
             );
         }
 
-        if($orderByOrder=="desc"){
-            $res=array_reverse($res);
+        if ($orderByOrder == "desc") {
+            $res = array_reverse($res);
         }
 
         if ($limit) {
             $res = array_slice($res, $limit*$page, $limit);
         }
+
         return $res;
+    }
+
+    private function processEntitySummary(array $alerts, $from, $until, $meritCutoff): OutagesSummary {
+        $eventmap = $this->buildEvents($alerts, $from, $until, false);
+        $scores = $this->computeSummaryScores($eventmap, $meritCutoff, false);
+
+        foreach ($alerts as $al) {
+            $this->entityManager->detach($al);
+        }
+
+        return new OutagesSummary($scores, $alerts[0]->getEntity(), $this->countEventsFromMap($eventmap));
     }
 
     private function buildEvents($alerts, $from, $until, bool $includeAlerts = true, $orderBy="score"){

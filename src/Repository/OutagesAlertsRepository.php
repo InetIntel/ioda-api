@@ -100,7 +100,6 @@ class OutagesAlertsRepository extends ServiceEntityRepository
 
         return $qb->getQuery()->getResult();
     }
-}
     /**
      * @return \Iterable
      */
@@ -150,3 +149,4 @@ class OutagesAlertsRepository extends ServiceEntityRepository
 
         return $qb->getQuery()->toIterable();
     }
+}

@@ -189,7 +189,6 @@ class OutagesAlertsService
 
         return $alerts;
     }
-}
 
     public function findAlertsStream(
         $from, $until, $entityType, $entityCode,
@@ -243,3 +242,4 @@ class OutagesAlertsService
             }
         }
     }
+}
