@@ -101,3 +101,52 @@ class OutagesAlertsRepository extends ServiceEntityRepository
         return $qb->getQuery()->getResult();
     }
 }
+    /**
+     * @return \Iterable
+     */
+    public function findAlertsIterable(
+        $from, $until,
+        ?string $entityType, ?string $entityCode, ?string $datasource=null,
+        ?string $relatedType=null, ?string $relatedCode=null,
+        ?int $extwindow=0, bool $orderByEntity = false)
+    {
+        $qb = $this->createQueryBuilder('a');
+        if ($orderByEntity) {
+            $qb->orderBy('a.metaType', 'ASC')
+               ->addOrderBy('a.metaCode', 'ASC')
+               ->addOrderBy('a.time', 'ASC');
+        } else {
+            $qb->orderBy('a.time', 'ASC');
+        }
+
+        if ($from) {
+            $qb->andWhere('a.time >= :from')->setParameter('from',
+                (int)$from - $extwindow);
+        }
+        if ($until) {
+            $qb->andWhere('a.time <= :until')->setParameter('until',
+                (int)$until + $extwindow);
+        }
+        if ($datasource){
+            $qb->andWhere('a.fqid LIKE :datasource')->setParameter('datasource', "%".$datasource."%");
+        }
+        if (isset($entityType)) {
+            $qb->andWhere('a.metaType = :metaType')
+                ->setParameter('metaType', $entityType);
+        }
+        if (isset($entityCode)) {
+            $codes = explode(",", $entityCode);
+            $qb->andWhere('a.metaCode IN (:codes)')
+                ->setParameter('codes', $codes);
+        }
+        if (isset($relatedType)) {
+            $qb->andWhere('a.relatedType = :relatedType')
+                ->setParameter('relatedType', $relatedType);
+        }
+        if (isset($relatedCode)) {
+            $qb->andWhere('a.relatedCode = :relatedCode')
+                ->setParameter('relatedCode', $relatedCode);
+        }
+
+        return $qb->getQuery()->toIterable();
+    }

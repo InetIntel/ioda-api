@@ -190,3 +190,56 @@ class OutagesAlertsService
         return $alerts;
     }
 }
+
+    public function findAlertsStream(
+        $from, $until, $entityType, $entityCode,
+        $datasource, $limit=null, $page=0,
+        $relatedType=null, $relatedCode=null, $ignoreMethods=null,
+        $extendWindow=0, bool $orderByEntity = false
+    ): \Generator
+    {
+        $alerts = $this->repo->findAlertsIterable($from, $until, $entityType, $entityCode, $datasource, $relatedType, $relatedCode, $extendWindow, $orderByEntity);
+        $filtered = $this->filterIgnoredAlertsStream($alerts, $ignoreMethods);
+        return $this->squashAlertsStream($filtered);
+    }
+
+    private function filterIgnoredAlertsStream(iterable $alerts, ?string $ignoreMethods): \Generator
+    {
+        if ($ignoreMethods != null) {
+            $methods = explode(",", $ignoreMethods);
+        } else {
+            foreach ($alerts as $al) {
+                $al->setDatasource($this->datasourceService->fqidToDatasourceName($al->getFqid()));
+                yield $al;
+            }
+            return;
+        }
+
+        foreach($alerts as $al) {
+            $al->setDatasource($this->datasourceService->fqidToDatasourceName($al->getFqid()));
+            $lookup = $al->getDatasource() . "." . $al->getMethod();
+            if (in_array($lookup, $methods)) continue;
+            if (in_array($al->getDatasource() . ".*", $methods)) continue;
+            if (in_array("*." . $al->getMethod(), $methods)) continue;
+            yield $al;
+        }
+    }
+
+    private function squashAlertsStream(iterable $alerts): \Generator
+    {
+        $currentLevel = [];
+        foreach ($alerts as $alert) {
+            $alertId = $alert->getFqid() . $alert->getMetaType() . $alert->getMetaCode();
+            $level = $alert->getLevel();
+            if (!array_key_exists($alertId, $currentLevel)) {
+                $currentLevel[$alertId] = $level;
+                yield $alert;
+                continue;
+            }
+            $cl = $currentLevel[$alertId];
+            if (($cl == "critical" && $level == "normal") || ($cl != "critical" && $cl != $level)) {
+                $currentLevel[$alertId] = $level;
+                yield $alert;
+            }
+        }
+    }
