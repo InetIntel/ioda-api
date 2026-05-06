@@ -144,8 +144,16 @@ class SignalsController extends ApiController
 
         if(count($metas)<1){
             throw new InvalidArgumentException(
-                sprintf("cannot find corresponding metadata entity %d", count($metas))
+                    "no valid entities are present in the query parameters"
             );
+        }
+
+        if ($datasource === "merit-subnetasn") {
+            foreach ($metas as $m) {
+                if ($m->getType()->getType() !== 'asn') {
+                    throw new InvalidArgumentException("merit-subnetasn only supports queries for ASN entities.");
+                }
+            }
         }
     }
 
@@ -199,10 +207,7 @@ class SignalsController extends ApiController
      *     name="datasource",
      *     in="query",
      *     description="Filter signals by datasource",
-     *     schema=@SWG\Schema(
-     *     	type="string",
-     *          enum={"bgp", "ping-slash24", "merit-nt", "gtr", "gtr-norm", "gtr-sarima", "mozilla", "upstream-delay-penult-asns", "upstream-delay-penult-e2e-latency", "ping-slash24-latency", "ping-slash24-loss"}
-     *     ),
+     *     schema=@SWG\Schema(type="string"),
      *     required=false,
      * )
      * @SWG\Parameter(

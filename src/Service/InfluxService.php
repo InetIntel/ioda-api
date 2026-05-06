@@ -177,6 +177,12 @@ class InfluxService
             ],
             "extra" => "",
         ],
+        "merit-subnetasn" => [
+            "asn" => [
+                "measurement" => "subnetasn",
+            ],
+            "extra" => "",
+        ],
         "gtr" => [
             "country" => [
                 "measurement" => "google_tr",

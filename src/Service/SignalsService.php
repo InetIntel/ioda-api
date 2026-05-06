@@ -115,6 +115,7 @@ class SignalsService
 	    "bgp" => [ -1 ],
 	    "ping-slash24" => [ -1 ],
 	    "merit-nt" => [ -1 ],
+	    "merit-subnetasn" => [ -1 ],
 	    "ucsd-nt" => [ -1 ],
 	    "gtr" => [ -1 ],
 	    "gtr-norm" => [ -1 ],

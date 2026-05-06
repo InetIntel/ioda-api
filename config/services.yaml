@@ -4,6 +4,7 @@ parameters:
     ioda_api_version: '%env(CH_API_VERSION)%'
     influx_secret: '%env(INFLUXV2DB_SECRET)%'
     influx_uri: '%env(INFLUXV2DB_API)%'
+    enable_merit_subnetasn: '%env(ENABLE_MERIT_SUBNETASN)%'
 
 
 services:
@@ -30,6 +31,9 @@ services:
     App\Controller\:
         resource: '../src/Controller'
         tags: ['controller.service_arguments']
+
+    App\OpenApi\DatasourceEnumDescriber:
+        tags: ['nelmio_api_doc.describer']
 
     datetime_method_normalizer:
         class: Symfony\Component\Serializer\Normalizer\DateTimeNormalizer

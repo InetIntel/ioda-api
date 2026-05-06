@@ -84,8 +84,13 @@ class DatasourceService
 
     private $EVENTS_DATASOURCE;
 
-    public function __construct()
-    {
+    private $enableMeritSubnetasn;
+
+    public function __construct(#[Autowire(param:'enable_merit_subnetasn')]
+            bool $enableMeritSubnetasn) {
+
+        $this->enableMeritSubnetasn = $enableMeritSubnetasn;
+
         $this->RAW_DATA_DATASOURCES = [
         /*
             "ucsd-nt" => new DatasourceEntity(
@@ -182,6 +187,17 @@ class DatasourceService
                 "influxv2"
             )
         ];
+
+        if ($this->enableMeritSubnetasn) {
+            $this->RAW_DATA_DATASOURCES["merit-subnetasn"] =
+                    new DatasourceEntity(
+                            "merit-subnetasn",
+                            "Merit Telescope /24 Subnets per ASN",
+                            "/24 Subnets Observed",
+                            3600,
+                            "influxv2");
+        }
+
         $this->EVENTS_DATASOURCE =
             new DatasourceEntity(
                 "outages",
@@ -223,6 +239,8 @@ class DatasourceService
             $ds = "ucsd-nt";
         } elseif (strpos($fqid,"merit-nt")!==false){
             $ds = "merit-nt";
+        } elseif (strpos($fqid,"merit-subnetasn")!==false){
+            $ds = "merit-subnetasn";
         } elseif (strpos($fqid,"gtr")!==false){
             $ds = "gtr";
         } elseif (strpos($fqid,"ping-slash24")!==false){
