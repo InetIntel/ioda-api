@@ -58,8 +58,18 @@ class DatasourceEnumDescriber implements DescriberInterface
 
     public function describe(OpenApi $api): void
     {
-        // Locate the signals raw endpoint path
-        $path = $api->paths->get('/signals/raw/{entityType}/{entityCode}');
+        if (is_string($api->paths) || !is_iterable($api->paths)) {
+            return;
+        }
+
+        $path = null;
+        foreach ($api->paths as $pathItem) {
+            if ($pathItem->path === '/signals/raw/{entityType}/{entityCode}') {
+                $path = $pathItem;
+                break;
+            }
+        }
+
         if (!$path) {
             return;
         }
@@ -70,7 +80,7 @@ class DatasourceEnumDescriber implements DescriberInterface
         // Find the 'datasource' parameter and dynamically update its enum
         // schema
         $getOperation = $path->get;
-        if ($getOperation && isset($getOperation->parameters)) {
+        if ($getOperation && !is_string($getOperation) && isset($getOperation->parameters) && is_array($getOperation->parameters)) {
             foreach ($getOperation->parameters as $parameter) {
                 if ($parameter->name === 'datasource') {
                     // Update schema enum with dynamic list

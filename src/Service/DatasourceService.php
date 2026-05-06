@@ -86,8 +86,7 @@ class DatasourceService
 
     private $enableMeritSubnetasn;
 
-    public function __construct(#[Autowire(param:'enable_merit_subnetasn')]
-            bool $enableMeritSubnetasn) {
+    public function __construct(bool $enableMeritSubnetasn) {
 
         $this->enableMeritSubnetasn = $enableMeritSubnetasn;
 
