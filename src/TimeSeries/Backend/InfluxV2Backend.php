@@ -110,7 +110,6 @@ class InfluxV2Backend
         //return the transfer as a string
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_VERBOSE, true);
-        curl_setopt($ch, CURLOPT_STDERR, fopen('/tmp/curl.log', 'a+'));
 
         // $output contains the output string
         $output = curl_exec($ch);
