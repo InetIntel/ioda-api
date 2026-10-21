@@ -45,6 +45,9 @@ class EntitiesRepository extends ServiceEntityRepository
 {
     const METADATA_DATA_CACHE_TIMEOUT = 3600;
 
+    private MetadataEntityType $geoasnType;
+    private array $cachedgeo = [];
+
     public function __construct(ManagerRegistry $registry)
     {
         $this->geoasnType = new MetadataEntityType();
