@@ -110,12 +110,30 @@ class InfluxV2Backend
         //return the transfer as a string
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_VERBOSE, true);
+        curl_setopt($ch, CURLOPT_UNRESTRICTED_AUTH, true);
 
         // $output contains the output string
         $output = curl_exec($ch);
+
+        if ($output === false) {
+            $err = curl_error($ch);
+            curl_close($ch);
+            throw new BackendException("curl error querying InfluxDB ($influx_uri): " . $err);
+        }
+
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         // close curl resource to free up system resources
         curl_close($ch);
-        return json_decode($output, true);
+
+        if ($httpCode >= 400) {
+            throw new BackendException("InfluxDB returned HTTP $httpCode: " . substr($output, 0, 500));
+        }
+
+        $decoded = json_decode($output, true);
+        if ($decoded === null && json_last_error() !== JSON_ERROR_NONE) {
+            throw new BackendException("Failed to decode JSON response from InfluxDB: " . json_last_error_msg());
+        }
+        return $decoded ?? [];
     }
 
     private function upstreamDelayCompare($a, $b) {
